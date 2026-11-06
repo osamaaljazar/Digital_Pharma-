@@ -1,0 +1,236 @@
+@model Digital_Pharma.Models.Search
+@{
+    ViewData["Title"] = "نتيجة مشتركة";
+    Layout = null; // standalone page - no login required
+
+    var sevColors = new Dictionary<string,string> {
+        ["safe"]     = "#00c9a7",
+        ["caution"]  = "#3ecf8e",
+        ["moderate"] = "#ffa502",
+        ["serious"]  = "#ff6348",
+        ["critical"] = "#ff4757",
+        ["unknown"]  = "#94a3b8"
+    };
+    var sevLabels = new Dictionary<string,string> {
+        ["safe"]     = "آمن",
+        ["caution"]  = "يستدعي الانتباه",
+        ["moderate"] = "تداخل متوسط",
+        ["serious"]  = "تداخل خطير",
+        ["critical"] = "خطر شديد",
+        ["unknown"]  = "غير محدد"
+    };
+    var sevIcons = new Dictionary<string,string> {
+        ["safe"]     = "fa-circle-check",
+        ["caution"]  = "fa-eye",
+        ["moderate"] = "fa-triangle-exclamation",
+        ["serious"]  = "fa-circle-exclamation",
+        ["critical"] = "fa-skull-crossbones",
+        ["unknown"]  = "fa-question-circle"
+    };
+    string sev = "unknown";
+    if (Model != null && Model.Severity != null && sevColors.ContainsKey(Model.Severity.ToLower()))
+        sev = Model.Severity.ToLower();
+}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نتيجة مشتركة - Digital Pharma</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);
+            min-height: 100vh; color: #f8fafc; margin: 0;
+        }
+        .shared-navbar {
+            background: rgba(15,23,42,.85); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            padding: 14px 0; position: sticky; top: 0; z-index: 100;
+        }
+        .shared-navbar .inner {
+            max-width: 840px; margin: 0 auto; padding: 0 20px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none; color: white; font-weight: 800; font-size: 1.2rem;
+        }
+        .brand .bico {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg,#00c9a7,#0d6efd);
+            border-radius: 9px; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: white;
+        }
+        .shared-badge {
+            padding: 5px 14px; background: rgba(0,201,167,.12);
+            border: 1px solid rgba(0,201,167,.25); border-radius: 20px;
+            color: #00c9a7; font-size: .8rem; font-weight: 600;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .page { padding: 44px 20px 60px; max-width: 840px; margin: 0 auto; }
+        /* Drug banner */
+        .drugs-banner {
+            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 16px; padding: 24px;
+            display: flex; align-items: center; justify-content: center; gap: 0;
+            margin-bottom: 24px;
+        }
+        .drug-pill {
+            background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+            border-radius: 12px; padding: 14px 24px; text-align: center; flex: 1; max-width: 200px;
+        }
+        .drug-pill .dp-label { font-size: .75rem; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+        .drug-pill .dp-name  { font-size: 1.05rem; font-weight: 700; color: white; }
+        .vs-con { width: 60px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+        .vs-con .vl { width: 100%; height: 1px; background: rgba(255,255,255,.15); }
+        .vs-con .vt { font-size: .75rem; font-weight: 700; background: rgba(255,255,255,.1); padding: 4px 8px; border-radius: 6px; color: rgba(255,255,255,.5); }
+        /* Result card */
+        .result-card {
+            border-radius: 16px; padding: 26px 28px; border: 1.5px solid; margin-bottom: 20px;
+            display: flex; align-items: flex-start; gap: 18px;
+        }
+        .result-card .rc-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; flex-shrink: 0;
+        }
+        .result-card .rc-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 12px; border-radius: 16px;
+            font-size: .78rem; font-weight: 700; margin-bottom: 8px;
+        }
+        .result-card .rc-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+        .result-card .rc-summary { color: rgba(255,255,255,.75); font-size: .9rem; line-height: 1.7; }
+        /* Info sections */
+        .info-section {
+            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 13px; padding: 18px 20px; margin-bottom: 16px;
+        }
+        .info-section .is-title {
+            font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.5);
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        }
+        .info-section .is-text { color: rgba(255,255,255,.75); font-size: .9rem; line-height: 1.8; }
+        /* CTA */
+        .cta-box {
+            text-align: center; padding: 32px;
+            background: linear-gradient(135deg,rgba(0,201,167,.1),rgba(13,110,253,.1));
+            border: 1px solid rgba(0,201,167,.2); border-radius: 16px; margin-top: 24px;
+        }
+        .cta-box h3 { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 8px; }
+        .cta-box p { color: rgba(255,255,255,.55); font-size: .88rem; margin-bottom: 18px; }
+        .btn-signup {
+            padding: 14px 32px;
+            background: linear-gradient(135deg,#00c9a7,#0d6efd);
+            border: none; border-radius: 12px; color: white;
+            font-family: 'Tajawal', sans-serif; font-size: .95rem; font-weight: 700;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: 0 6px 20px rgba(0,201,167,.3);
+        }
+        .meta { color: rgba(255,255,255,.3); font-size: .78rem; margin-top: 6px; }
+        /* Not found */
+        .not-found { text-align: center; padding: 80px 20px; }
+        .not-found i { font-size: 4rem; color: rgba(255,255,255,.2); margin-bottom: 20px; display: block; }
+        .not-found h2 { color: rgba(255,255,255,.5); font-size: 1.3rem; margin-bottom: 10px; }
+        .not-found p { color: rgba(255,255,255,.3); font-size: .9rem; }
+    </style>
+</head>
+<body>
+    <nav class="shared-navbar">
+        <div class="inner">
+            <a href="/" class="brand">
+                <div class="bico"><i class="fa-solid fa-pills"></i></div>
+                Digital Pharma
+            </a>
+            <span class="shared-badge"><i class="fa-solid fa-share-nodes"></i> نتيجة مشتركة</span>
+        </div>
+    </nav>
+
+    <div class="page">
+        @if (ViewBag.NotFound == true || Model == null)
+        {
+            <div class="not-found">
+                <i class="fa-solid fa-link-slash"></i>
+                <h2>الرابط غير صالح أو منتهي الصلاحية</h2>
+                <p>لم نتمكن من العثور على هذه النتيجة. ربما تم حذفها أو الرابط غير صحيح.</p>
+            </div>
+        }
+        else
+        {
+            <div class="drugs-banner">
+                <div class="drug-pill">
+                    <div class="dp-label">الدواء الأول</div>
+                    <div class="dp-name">@Model.Drug1Name</div>
+                </div>
+                <div class="vs-con">
+                    <div class="vl"></div>
+                    <div class="vt">VS</div>
+                    <div class="vl"></div>
+                </div>
+                <div class="drug-pill">
+                    <div class="dp-label">الدواء الثاني</div>
+                    <div class="dp-name">@Model.Drug2Name</div>
+                </div>
+            </div>
+
+            <div class="result-card"
+                 style="background:@(sevColors[sev])18; border-color:@(sevColors[sev])">
+                <div class="rc-icon" style="background:@(sevColors[sev])22; color:@(sevColors[sev])">
+                    <i class="fa-solid @(sevIcons[sev])"></i>
+                </div>
+                <div>
+                    <div class="rc-badge" style="background:@(sevColors[sev])22; color:@(sevColors[sev])">
+                        <i class="fa-solid fa-circle" style="font-size:.45rem"></i>
+                        @(sevLabels[sev])
+                    </div>
+                    <div class="rc-title" style="color:@(sevColors[sev])">
+                        @(Model.InteractionFound ? "تم اكتشاف تداخل دوائي" : "لم يُكتشف تداخل خطير")
+                    </div>
+                    <div class="rc-summary">@Model.ResultMessage</div>
+                    <div class="meta"><i class="fa-regular fa-calendar"></i> @Model.SearchDate.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.AiAnalysis))
+            {
+                <div class="info-section">
+                    <div class="is-title"><i class="fa-solid fa-microscope" style="color:#63b3ed"></i> التفاصيل الطبية</div>
+                    <div class="is-text">@Model.AiAnalysis</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.Recommendation))
+            {
+                <div class="info-section">
+                    <div class="is-title"><i class="fa-solid fa-clipboard-check" style="color:#00c9a7"></i> التوصية</div>
+                    <div class="is-text">@Model.Recommendation</div>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(Model.SafeAlternatives))
+            {
+                <div class="info-section" style="background:rgba(0,201,167,.06); border-color:rgba(0,201,167,.18)">
+                    <div class="is-title"><i class="fa-solid fa-lightbulb" style="color:#00c9a7"></i> البديل الآمن المقترح</div>
+                    <div class="is-text" style="color:#00c9a7">@Model.SafeAlternatives</div>
+                </div>
+            }
+
+            <div class="cta-box">
+                <h3>افحص أدويتك بنفسك</h3>
+                <p>سجّل مجاناً وتمتع بتحليل مخصّص لحالتك الصحية مع مراعاة جميع أدويتك الحالية</p>
+                <a href="/Home/Auth" class="btn-signup">
+                    <i class="fa-solid fa-user-plus"></i> إنشاء حساب مجاني
+                </a>
+            </div>
+        }
+
+        <p style="text-align:center; color:rgba(255,255,255,.25); font-size:.75rem; margin-top:28px">
+            <i class="fa-solid fa-circle-info"></i>
+            هذا التحليل لأغراض إرشادية فقط ولا يُغني عن استشارة الطبيب أو الصيدلاني.
+        </p>
+    </div>
+</body>
+</html>

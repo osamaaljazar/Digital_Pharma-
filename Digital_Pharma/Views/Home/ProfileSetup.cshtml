@@ -1,0 +1,351 @@
+@{
+    ViewData["Title"] = "إعداد الملف الصحي";
+}
+
+@section HeadStyles {
+<style>
+    .profile-page {
+        min-height: calc(100vh - 140px);
+        display: flex; align-items: center; justify-content: center;
+        padding: 40px 20px;
+    }
+    .profile-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        padding: 48px;
+        max-width: 600px; width: 100%;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        animation: fadeInUp 0.5s ease;
+    }
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .step-header { text-align: center; margin-bottom: 36px; }
+    .step-header .step-icon {
+        width: 70px; height: 70px;
+        background: linear-gradient(135deg, rgba(0,201,167,0.25), rgba(13,110,253,0.25));
+        border: 1.5px solid rgba(0,201,167,0.3);
+        border-radius: 50%; margin: 0 auto 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: #00c9a7;
+    }
+    .step-header h2 { font-size: 1.6rem; font-weight: 800; color: white; margin-bottom: 8px; }
+    .step-header p  { color: rgba(255,255,255,0.55); font-size: 0.95rem; }
+    .progress-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 32px; }
+    .progress-dots span {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        transition: all 0.3s;
+    }
+    .progress-dots span.active {
+        background: linear-gradient(135deg, #00c9a7, #0d6efd);
+        transform: scale(1.2);
+    }
+    /* Gender selector */
+    .gender-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .gender-option { position: relative; }
+    .gender-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .gender-option label {
+        display: flex; flex-direction: column; align-items: center; gap: 10px;
+        padding: 22px 16px;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid rgba(255,255,255,0.12);
+        border-radius: 14px; cursor: pointer;
+        transition: all 0.3s; color: rgba(255,255,255,0.7);
+        font-weight: 600; font-size: 0.95rem;
+    }
+    .gender-option label .g-icon {
+        font-size: 2rem;
+        background: rgba(255,255,255,0.08);
+        width: 56px; height: 56px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        transition: all 0.3s;
+    }
+    .gender-option input:checked + label {
+        border-color: #00c9a7;
+        background: rgba(0,201,167,0.1);
+        color: white;
+        box-shadow: 0 0 0 4px rgba(0,201,167,0.12);
+    }
+    .gender-option input:checked + label .g-icon {
+        background: linear-gradient(135deg, #00c9a7, #0d6efd);
+        color: white;
+    }
+    .gender-option label:hover {
+        border-color: rgba(0,201,167,0.5);
+        background: rgba(0,201,167,0.07);
+    }
+    /* Female-only sections */
+    .female-section {
+        display: none;
+        background: rgba(255,107,157,0.06);
+        border: 1px solid rgba(255,107,157,0.18);
+        border-radius: 14px; padding: 20px;
+        margin-bottom: 20px;
+    }
+    .female-section.visible { display: block; animation: fadeInUp 0.3s ease; }
+    .female-section .fs-title {
+        color: rgba(255,255,255,0.85); font-weight: 700; font-size: 0.95rem; margin-bottom: 16px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .female-section .fs-title i { color: #ff6b9d; }
+    /* Yes/No buttons */
+    .yn-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .yn-option { position: relative; }
+    .yn-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .yn-option label {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        padding: 14px 18px;
+        background: rgba(255,255,255,0.05);
+        border: 2px solid rgba(255,255,255,0.12);
+        border-radius: 12px; cursor: pointer;
+        transition: all 0.3s; color: rgba(255,255,255,0.7);
+        font-weight: 600; font-size: 0.95rem;
+    }
+    .yn-option.yes input:checked + label {
+        border-color: #00c9a7; background: rgba(0,201,167,0.12); color: white;
+    }
+    .yn-option.no input:checked + label {
+        border-color: #ff4757; background: rgba(255,71,87,0.12); color: white;
+    }
+    .yn-option label:hover {
+        border-color: rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.08);
+    }
+    /* Pregnant section (nested) */
+    .pregnant-section {
+        display: none;
+        margin-top: 16px;
+        padding: 16px;
+        background: rgba(255,165,2,0.08);
+        border: 1px solid rgba(255,165,2,0.2);
+        border-radius: 10px;
+    }
+    .pregnant-section.visible { display: block; animation: fadeInUp 0.3s ease; }
+    .pregnant-section .pg-title {
+        color: rgba(255,255,255,0.8); font-weight: 600; font-size: 0.9rem; margin-bottom: 12px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .pregnant-section .pg-title i { color: #ffa502; }
+    /* Conditions */
+    .field-group { margin-bottom: 20px; }
+    .field-group label {
+        display: flex; align-items: center; gap: 8px;
+        color: rgba(255,255,255,0.7); font-size: 0.9rem;
+        font-weight: 600; margin-bottom: 8px;
+    }
+    .field-group label i { color: #00c9a7; }
+    .field-group textarea {
+        width: 100%; padding: 14px 16px;
+        background: rgba(255,255,255,0.07);
+        border: 1.5px solid rgba(255,255,255,0.12);
+        border-radius: 12px; color: white;
+        font-family: 'Tajawal', sans-serif; font-size: 0.95rem;
+        resize: vertical; min-height: 90px; outline: none;
+        transition: all 0.25s;
+    }
+    .field-group textarea::placeholder { color: rgba(255,255,255,0.3); }
+    .field-group textarea:focus {
+        border-color: #00c9a7;
+        background: rgba(0,201,167,0.07);
+        box-shadow: 0 0 0 4px rgba(0,201,167,0.12);
+    }
+    /* Quick chips */
+    .quick-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .quick-chips button {
+        padding: 5px 12px;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 20px; color: rgba(255,255,255,0.65);
+        font-family: 'Tajawal', sans-serif; font-size: 0.8rem;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .quick-chips button:hover { background: rgba(0,201,167,0.15); border-color: #00c9a7; color: white; }
+    /* Submit */
+    .btn-profile-submit {
+        width: 100%; padding: 16px;
+        background: linear-gradient(135deg, #00c9a7, #0d6efd);
+        border: none; border-radius: 14px;
+        color: white; font-family: 'Tajawal', sans-serif;
+        font-size: 1.05rem; font-weight: 700;
+        cursor: pointer; transition: all 0.3s;
+        box-shadow: 0 8px 25px rgba(0,201,167,0.35);
+        display: flex; align-items: center; justify-content: center; gap: 10px;
+        margin-top: 10px;
+    }
+    .btn-profile-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(0,201,167,0.45); }
+    .skip-link {
+        text-align: center; margin-top: 14px;
+        color: rgba(255,255,255,0.4); font-size: 0.85rem;
+    }
+    .skip-link a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    .skip-link a:hover { color: rgba(255,255,255,0.8); }
+    .section-divider {
+        height: 1px; background: rgba(255,255,255,0.08);
+        margin: 20px 0;
+    }
+</style>
+}
+
+<div class="profile-page">
+    <div class="profile-card">
+        <div class="progress-dots">
+            <span class="active"></span>
+            <span class="active"></span>
+            <span></span>
+        </div>
+
+        <div class="step-header">
+            <div class="step-icon"><i class="fa-solid fa-user-nurse"></i></div>
+            <h2>أخبرنا عن حالتك الصحية</h2>
+            <p>هذه المعلومات تساعد الذكاء الاصطناعي على تقديم تحليل أدق وأكثر ملاءمة لحالتك</p>
+        </div>
+
+        <form asp-action="ProfileSetup" method="post">
+            <!-- Gender -->
+            <div class="field-group">
+                <label><i class="fa-solid fa-venus-mars"></i> الجنس</label>
+            </div>
+            <div class="gender-selector">
+                <div class="gender-option">
+                    <input type="radio" name="gender" id="gMale" value="male" required />
+                    <label for="gMale">
+                        <div class="g-icon"><i class="fa-solid fa-mars"></i></div>
+                        ذكر
+                    </label>
+                </div>
+                <div class="gender-option">
+                    <input type="radio" name="gender" id="gFemale" value="female" />
+                    <label for="gFemale">
+                        <div class="g-icon"><i class="fa-solid fa-venus"></i></div>
+                        أنثى
+                    </label>
+                </div>
+            </div>
+
+            <!-- Marriage status (female only) -->
+            <div class="female-section" id="marriedSection">
+                <div class="fs-title">
+                    <i class="fa-solid fa-ring"></i>
+                    هل أنتِ متزوجة؟
+                </div>
+                <div class="yn-selector">
+                    <div class="yn-option yes">
+                        <input type="radio" name="isMarried" id="marriedYes" value="true" />
+                        <label for="marriedYes">
+                            <i class="fa-solid fa-check"></i> نعم
+                        </label>
+                    </div>
+                    <div class="yn-option no">
+                        <input type="radio" name="isMarried" id="marriedNo" value="false" />
+                        <label for="marriedNo">
+                            <i class="fa-solid fa-xmark"></i> لا
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Pregnancy (married female only) -->
+                <div class="pregnant-section" id="pregnantSection">
+                    <div class="pg-title">
+                        <i class="fa-solid fa-baby"></i>
+                        هل أنتِ حامل؟
+                    </div>
+                    <div class="yn-selector">
+                        <div class="yn-option yes">
+                            <input type="radio" name="isPregnant" id="pregYes" value="true" />
+                            <label for="pregYes">
+                                <i class="fa-solid fa-check"></i> نعم، أنا حامل
+                            </label>
+                        </div>
+                        <div class="yn-option no">
+                            <input type="radio" name="isPregnant" id="pregNo" value="false" />
+                            <label for="pregNo">
+                                <i class="fa-solid fa-xmark"></i> لا
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Medical conditions -->
+            <div class="field-group">
+                <label>
+                    <i class="fa-solid fa-heart-pulse"></i>
+                    الأمراض المزمنة أو الحالات الصحية
+                    <span style="color:rgba(255,255,255,0.3); font-weight:400; font-size:0.8rem">(اختياري)</span>
+                </label>
+                <div class="quick-chips">
+                    <button type="button" onclick="addCondition('السكري')">السكري</button>
+                    <button type="button" onclick="addCondition('ضغط الدم')">ضغط الدم</button>
+                    <button type="button" onclick="addCondition('أمراض القلب')">أمراض القلب</button>
+                    <button type="button" onclick="addCondition('الربو')">الربو</button>
+                    <button type="button" onclick="addCondition('الكلى')">أمراض الكلى</button>
+                    <button type="button" onclick="addCondition('الكبد')">أمراض الكبد</button>
+                    <button type="button" onclick="addCondition('الغدة الدرقية')">الغدة الدرقية</button>
+                    <button type="button" onclick="addCondition('الصرع')">الصرع</button>
+                    <button type="button" onclick="addCondition('الروماتيزم')">الروماتيزم</button>
+                </div>
+                <textarea name="medicalConditions" id="conditionsInput"
+                          placeholder="مثال: السكري، ضغط الدم المرتفع، أمراض القلب..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-profile-submit">
+                <i class="fa-solid fa-arrow-left"></i>
+                حفظ ومتابعة
+            </button>
+        </form>
+
+        <div class="skip-link">
+            <a asp-action="Index">تخطّي هذه الخطوة الآن ›</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Show/hide female sections
+    document.querySelectorAll('input[name="gender"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var ms = document.getElementById('marriedSection');
+            if (this.value === 'female') {
+                ms.classList.add('visible');
+            } else {
+                ms.classList.remove('visible');
+                document.getElementById('pregnantSection').classList.remove('visible');
+                // Reset hidden values
+                document.querySelectorAll('input[name="isMarried"]').forEach(r => r.checked = false);
+                document.querySelectorAll('input[name="isPregnant"]').forEach(r => r.checked = false);
+            }
+        });
+    });
+
+    // Show pregnancy question only if married
+    document.querySelectorAll('input[name="isMarried"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            var ps = document.getElementById('pregnantSection');
+            if (this.value === 'true') {
+                ps.classList.add('visible');
+            } else {
+                ps.classList.remove('visible');
+                document.querySelectorAll('input[name="isPregnant"]').forEach(r => r.checked = false);
+            }
+        });
+    });
+
+    // Quick chips
+    function addCondition(cond) {
+        var ta = document.getElementById('conditionsInput');
+        var current = ta.value.trim();
+        if (current && !current.includes(cond)) {
+            ta.value = current + '، ' + cond;
+        } else if (!current) {
+            ta.value = cond;
+        }
+    }
+</script>
+}

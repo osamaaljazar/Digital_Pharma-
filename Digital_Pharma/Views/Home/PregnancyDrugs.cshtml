@@ -1,0 +1,238 @@
+@model List<Digital_Pharma.Models.PregnancyDrugItem>
+@{
+    ViewData["Title"] = "أدوية خطرة أثناء الحمل";
+    var critical = Model?.Where(d => d.Severity == "critical").ToList() ?? new();
+    var serious  = Model?.Where(d => d.Severity == "serious").ToList()  ?? new();
+    var moderate = Model?.Where(d => d.Severity == "moderate").ToList() ?? new();
+}
+
+@section HeadStyles {
+<style>
+    .preg-page { padding: 44px 0 60px; }
+    .page-header { text-align: center; margin-bottom: 40px; }
+    .page-header .ph-banner {
+        background: linear-gradient(135deg,rgba(255,107,157,.15),rgba(255,71,87,.12));
+        border: 1.5px solid rgba(255,107,157,.3);
+        border-radius: 20px; padding: 32px; margin-bottom: 8px;
+    }
+    .page-header .ph-icon {
+        width: 72px; height: 72px;
+        background: linear-gradient(135deg,#ff6b9d,#ff4757);
+        border-radius: 50%; margin: 0 auto 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: white;
+        box-shadow: 0 8px 24px rgba(255,71,87,.3);
+    }
+    .page-header h2 { font-size: 1.7rem; font-weight: 800; color: white; margin-bottom: 10px; }
+    .page-header p { color: rgba(255,255,255,.65); font-size: .95rem; line-height: 1.7; max-width: 540px; margin: 0 auto; }
+    /* Section */
+    .severity-section { margin-bottom: 36px; }
+    .sev-section-header {
+        display: flex; align-items: center; gap: 12px;
+        margin-bottom: 18px; padding-bottom: 14px;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sev-section-header .ssh-badge {
+        padding: 5px 16px; border-radius: 20px;
+        font-size: .82rem; font-weight: 700;
+    }
+    .sev-section-header .ssh-count {
+        color: rgba(255,255,255,.4); font-size: .85rem;
+    }
+    /* Drug cards */
+    .drug-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 16px; }
+    .drug-card {
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 14px; padding: 20px 22px;
+        transition: all .25s; animation: fadeInUp .4s ease;
+        border-right: 4px solid;
+    }
+    .drug-card:hover { background: rgba(255,255,255,.07); transform: translateY(-2px); }
+    .drug-card.critical { border-right-color: #ff4757; }
+    .drug-card.serious  { border-right-color: #ff6348; }
+    .drug-card.moderate { border-right-color: #ffa502; }
+    .drug-card .dc-name {
+        font-size: 1.05rem; font-weight: 800; color: white;
+        margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+    }
+    .drug-card .dc-category {
+        padding: 2px 10px; border-radius: 12px; font-size: .72rem; font-weight: 700;
+    }
+    .drug-card.critical .dc-category { background: rgba(255,71,87,.2); color: #ff6b7a; }
+    .drug-card.serious  .dc-category { background: rgba(255,99,72,.2); color: #ff8c7a; }
+    .drug-card.moderate .dc-category { background: rgba(255,165,2,.2); color: #fbbf24; }
+    .drug-card .dc-risk {
+        color: rgba(255,255,255,.7); font-size: .87rem; line-height: 1.7; margin-bottom: 12px;
+    }
+    .drug-card .dc-alt {
+        display: flex; align-items: flex-start; gap: 8px;
+        padding: 10px 12px;
+        background: rgba(0,201,167,.08); border: 1px solid rgba(0,201,167,.2);
+        border-radius: 8px; font-size: .82rem; color: #00c9a7;
+    }
+    .drug-card .dc-alt i { flex-shrink: 0; margin-top: 2px; }
+    /* Warning banner */
+    .warning-banner {
+        background: rgba(255,165,2,.08); border: 1px solid rgba(255,165,2,.25);
+        border-radius: 14px; padding: 18px 22px;
+        display: flex; gap: 14px; align-items: flex-start;
+        margin-bottom: 28px;
+        color: rgba(255,255,255,.75); font-size: .9rem; line-height: 1.7;
+    }
+    .warning-banner i { color: #fbbf24; font-size: 1.3rem; flex-shrink: 0; margin-top: 2px; }
+    /* Loading */
+    .loading-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,.5); }
+    .loading-state i { font-size: 2.5rem; color: #00c9a7; display: block; margin-bottom: 14px; }
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@media (max-width: 600px) {
+        .drug-cards { grid-template-columns: 1fr; }
+    }
+</style>
+}
+
+<div class="preg-page fade-up">
+    <div class="container" style="max-width:900px">
+        <div class="page-header">
+            <div class="ph-banner">
+                <div class="ph-icon"><i class="fa-solid fa-baby"></i></div>
+                <h2>أدوية خطرة أثناء الحمل</h2>
+                <p>قائمة شاملة بالأدوية التي يُحظر استخدامها أو تستوجب الحذر الشديد خلال فترة الحمل، مع البديل الآمن لكل دواء</p>
+            </div>
+        </div>
+
+        <div class="warning-banner">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>
+                هذه القائمة توعوية فقط. <strong>لا تتوقفي عن أي دواء تصفه لكِ طبيبكِ دون استشارته أولاً</strong>،
+                حتى لو وَرَد في هذه القائمة — فالطبيب قد يرى أن فائدته تفوق المخاطرة في حالتكِ.
+                تصنيفات FDA للحمل: X = ممنوع قطعياً | D = خطر واضح | C = خطر غير مؤكد.
+            </span>
+        </div>
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="loading-state">
+                <i class="fa-solid fa-hourglass-half fa-spin"></i>
+                <p>جارٍ تحميل قائمة الأدوية...</p>
+            </div>
+        }
+        else
+        {
+            <!-- Critical -->
+            @if (critical.Count > 0)
+            {
+                <div class="severity-section">
+                    <div class="sev-section-header">
+                        <i class="fa-solid fa-skull-crossbones" style="color:#ff4757; font-size:1.2rem"></i>
+                        <span class="ssh-badge" style="background:rgba(255,71,87,.15); color:#ff4757">خطر شديد — ممنوع</span>
+                        <span class="ssh-count">@critical.Count دواء</span>
+                    </div>
+                    <div class="drug-cards">
+                        @foreach (var d in critical)
+                        {
+                            <div class="drug-card critical">
+                                <div class="dc-name">
+                                    @d.Name
+                                    @if (!string.IsNullOrEmpty(d.Category))
+                                    {
+                                        <span class="dc-category">@d.Category</span>
+                                    }
+                                </div>
+                                <div class="dc-risk">@d.Risk</div>
+                                @if (!string.IsNullOrEmpty(d.Alternative))
+                                {
+                                    <div class="dc-alt">
+                                        <i class="fa-solid fa-lightbulb"></i>
+                                        البديل الآمن: @d.Alternative
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Serious -->
+            @if (serious.Count > 0)
+            {
+                <div class="severity-section">
+                    <div class="sev-section-header">
+                        <i class="fa-solid fa-circle-exclamation" style="color:#ff6348; font-size:1.2rem"></i>
+                        <span class="ssh-badge" style="background:rgba(255,99,72,.15); color:#ff8c7a">خطير — يستوجب الحذر الشديد</span>
+                        <span class="ssh-count">@serious.Count دواء</span>
+                    </div>
+                    <div class="drug-cards">
+                        @foreach (var d in serious)
+                        {
+                            <div class="drug-card serious">
+                                <div class="dc-name">
+                                    @d.Name
+                                    @if (!string.IsNullOrEmpty(d.Category))
+                                    {
+                                        <span class="dc-category">@d.Category</span>
+                                    }
+                                </div>
+                                <div class="dc-risk">@d.Risk</div>
+                                @if (!string.IsNullOrEmpty(d.Alternative))
+                                {
+                                    <div class="dc-alt">
+                                        <i class="fa-solid fa-lightbulb"></i>
+                                        البديل الآمن: @d.Alternative
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Moderate -->
+            @if (moderate.Count > 0)
+            {
+                <div class="severity-section">
+                    <div class="sev-section-header">
+                        <i class="fa-solid fa-eye" style="color:#ffa502; font-size:1.2rem"></i>
+                        <span class="ssh-badge" style="background:rgba(255,165,2,.15); color:#fbbf24">يستوجب الانتباه</span>
+                        <span class="ssh-count">@moderate.Count دواء</span>
+                    </div>
+                    <div class="drug-cards">
+                        @foreach (var d in moderate)
+                        {
+                            <div class="drug-card moderate">
+                                <div class="dc-name">
+                                    @d.Name
+                                    @if (!string.IsNullOrEmpty(d.Category))
+                                    {
+                                        <span class="dc-category">@d.Category</span>
+                                    }
+                                </div>
+                                <div class="dc-risk">@d.Risk</div>
+                                @if (!string.IsNullOrEmpty(d.Alternative))
+                                {
+                                    <div class="dc-alt">
+                                        <i class="fa-solid fa-lightbulb"></i>
+                                        البديل الآمن: @d.Alternative
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Back links -->
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px">
+            <a asp-action="Index" style="padding:12px 22px; background:rgba(0,201,167,.1); border:1px solid rgba(0,201,167,.25); border-radius:10px; color:#00c9a7; text-decoration:none; font-size:.9rem; font-weight:600; display:flex; align-items:center; gap:7px">
+                <i class="fa-solid fa-magnifying-glass-plus"></i> فحص التداخل الدوائي
+            </a>
+            <a asp-action="MyMedications" style="padding:12px 22px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:10px; color:rgba(255,255,255,.7); text-decoration:none; font-size:.9rem; font-weight:600; display:flex; align-items:center; gap:7px">
+                <i class="fa-solid fa-pills"></i> أدويتي
+            </a>
+        </div>
+    </div>
+</div>

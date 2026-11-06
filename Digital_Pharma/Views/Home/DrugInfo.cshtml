@@ -1,0 +1,315 @@
+@model Digital_Pharma.Models.DrugInfoResult
+@{
+    ViewData["Title"] = Model?.Name != null && Model.Name.Length > 0 ? $"معلومات: {Model.Name}" : "معلومات دواء";
+}
+
+@section HeadStyles {
+<style>
+    .druginfo-page { padding: 44px 0 60px; }
+    /* Search bar */
+    .search-section {
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 18px; padding: 28px 32px; margin-bottom: 28px;
+    }
+    .search-section .ss-title {
+        font-size: .9rem; font-weight: 700; color: white; margin-bottom: 14px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .search-section .ss-title i { color: #00c9a7; }
+    .search-row { display: flex; gap: 12px; }
+    .search-row input {
+        flex: 1; padding: 14px 16px;
+        background: rgba(255,255,255,.07);
+        border: 1.5px solid rgba(255,255,255,.12);
+        border-radius: 12px; color: white;
+        font-family: 'Tajawal', sans-serif; font-size: 1rem;
+        outline: none; transition: all .25s;
+    }
+    .search-row input::placeholder { color: rgba(255,255,255,.3); }
+    .search-row input:focus {
+        border-color: #00c9a7; background: rgba(0,201,167,.07);
+        box-shadow: 0 0 0 3px rgba(0,201,167,.12);
+    }
+    .btn-search-drug {
+        padding: 14px 24px;
+        background: linear-gradient(135deg,#00c9a7,#0d6efd);
+        border: none; border-radius: 12px; color: white;
+        font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: 700;
+        cursor: pointer; transition: all .3s; white-space: nowrap;
+        display: flex; align-items: center; gap: 8px;
+        box-shadow: 0 6px 20px rgba(0,201,167,.3);
+    }
+    .btn-search-drug:hover { transform: translateY(-2px); }
+    /* Drug header */
+    .drug-header {
+        background: linear-gradient(135deg,rgba(0,201,167,.12),rgba(13,110,253,.12));
+        border: 1px solid rgba(0,201,167,.2);
+        border-radius: 20px; padding: 32px;
+        margin-bottom: 24px; text-align: center;
+        animation: fadeInUp .4s ease;
+    }
+    .drug-header .dh-icon {
+        width: 72px; height: 72px;
+        background: linear-gradient(135deg,#00c9a7,#0d6efd);
+        border-radius: 50%; margin: 0 auto 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; color: white;
+        box-shadow: 0 8px 24px rgba(0,201,167,.3);
+    }
+    .drug-header h2 { font-size: 1.8rem; font-weight: 800; color: white; margin-bottom: 8px; }
+    .drug-header .dh-category {
+        display: inline-block; padding: 4px 16px;
+        background: rgba(0,201,167,.15); border: 1px solid rgba(0,201,167,.3);
+        border-radius: 20px; color: #00c9a7; font-size: .85rem; font-weight: 600;
+    }
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+    .info-card {
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 14px; padding: 22px;
+        animation: fadeInUp .4s ease;
+    }
+    .info-card .ic-header {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .info-card .ic-icon {
+        width: 36px; height: 36px; border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .95rem;
+    }
+    .info-card .ic-title { font-size: .9rem; font-weight: 700; color: white; }
+    .info-card .ic-body {
+        color: rgba(255,255,255,.72); font-size: .88rem; line-height: 1.8;
+    }
+    /* Alert cards */
+    .alert-info {
+        border-radius: 13px; padding: 18px 22px; margin-bottom: 18px;
+        display: flex; align-items: flex-start; gap: 14px;
+        animation: fadeInUp .4s ease;
+    }
+    .alert-info.conflict { background: rgba(255,71,87,.08); border: 1px solid rgba(255,71,87,.2); }
+    .alert-info.warning  { background: rgba(255,165,2,.08);  border: 1px solid rgba(255,165,2,.2); }
+    .alert-info.safe     { background: rgba(0,201,167,.08); border: 1px solid rgba(0,201,167,.2); }
+    .alert-info .ai-icon { font-size: 1.2rem; margin-top: 2px; flex-shrink: 0; }
+    .alert-info .ai-label { font-size: .78rem; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+    .alert-info .ai-text  { color: rgba(255,255,255,.8); font-size: .88rem; line-height: 1.7; }
+    /* Error state */
+    .error-state {
+        background: rgba(255,71,87,.08); border: 1px solid rgba(255,71,87,.2);
+        border-radius: 14px; padding: 28px; text-align: center;
+        color: rgba(255,255,255,.6);
+    }
+    .error-state i { font-size: 2rem; color: #ff4757; margin-bottom: 12px; display: block; }
+    /* Placeholder */
+    .placeholder-state { text-align: center; padding: 60px 20px; color: rgba(255,255,255,.35); }
+    .placeholder-state .ps-icon { font-size: 4rem; margin-bottom: 20px; opacity: .4; }
+    .placeholder-state h3 { font-size: 1.2rem; font-weight: 600; color: rgba(255,255,255,.5); margin-bottom: 10px; }
+    .placeholder-state p { font-size: .9rem; }
+    .quick-drugs { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
+    .quick-drugs a {
+        padding: 6px 16px;
+        background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+        border-radius: 20px; color: rgba(255,255,255,.65);
+        font-size: .82rem; text-decoration: none; transition: all .2s;
+    }
+    .quick-drugs a:hover { background: rgba(0,201,167,.15); border-color: #00c9a7; color: white; }
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @@media (max-width: 600px) {
+        .info-grid { grid-template-columns: 1fr; }
+        .search-row { flex-direction: column; }
+    }
+</style>
+}
+
+<div class="druginfo-page fade-up">
+    <div class="container" style="max-width:820px">
+
+        <!-- Search -->
+        <div class="search-section">
+            <div class="ss-title"><i class="fa-solid fa-book-medical"></i> استفسر عن دواء</div>
+            <form method="get" asp-action="DrugInfo">
+                <div class="search-row">
+                    <input type="text" name="name" value="@Model?.QueryName"
+                           placeholder="أدخل اسم الدواء... مثال: Metformin, Aspirin, Lisinopril"
+                           required autocomplete="off" id="drugNameInput" />
+                    <button type="submit" class="btn-search-drug">
+                        <i class="fa-solid fa-magnifying-glass"></i> بحث
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        @if (Model == null || string.IsNullOrEmpty(Model.QueryName))
+        {
+            <!-- Placeholder state -->
+            <div class="placeholder-state">
+                <div class="ps-icon"><i class="fa-solid fa-prescription-bottle-medical"></i></div>
+                <h3>ابحث عن دواء للاطلاع على تفاصيله الكاملة</h3>
+                <p>ستحصل على: الاستخدامات، آلية العمل، الآثار الجانبية، موانع الاستخدام،<br>الأمان في الحمل، وتداخله مع أدويتك المحفوظة.</p>
+                <div class="quick-drugs">
+                    <a href="/Home/DrugInfo?name=Aspirin">Aspirin</a>
+                    <a href="/Home/DrugInfo?name=Metformin">Metformin</a>
+                    <a href="/Home/DrugInfo?name=Warfarin">Warfarin</a>
+                    <a href="/Home/DrugInfo?name=Lisinopril">Lisinopril</a>
+                    <a href="/Home/DrugInfo?name=Amoxicillin">Amoxicillin</a>
+                    <a href="/Home/DrugInfo?name=Atorvastatin">Atorvastatin</a>
+                    <a href="/Home/DrugInfo?name=Omeprazole">Omeprazole</a>
+                    <a href="/Home/DrugInfo?name=Ibuprofen">Ibuprofen</a>
+                </div>
+            </div>
+        }
+        else if (!Model.Success)
+        {
+            <div class="error-state">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <p>@(Model.ErrorMessage ?? "تعذّر الحصول على معلومات هذا الدواء. يرجى التحقق من الاسم والمحاولة مجدداً.")</p>
+            </div>
+        }
+        else
+        {
+            <!-- Drug Header -->
+            <div class="drug-header">
+                <div class="dh-icon"><i class="fa-solid fa-capsules"></i></div>
+                <h2>@(string.IsNullOrEmpty(Model.Name) ? Model.QueryName : Model.Name)</h2>
+                @if (!string.IsNullOrEmpty(Model.Category))
+                {
+                    <span class="dh-category">@Model.Category</span>
+                }
+            </div>
+
+            <!-- Conflicts with saved meds (top priority) -->
+            @if (!string.IsNullOrEmpty(Model.SavedMedConflicts) && Model.SavedMedConflicts.Length > 5)
+            {
+                <div class="alert-info conflict">
+                    <i class="fa-solid fa-triangle-exclamation ai-icon" style="color:#ff4757"></i>
+                    <div>
+                        <div class="ai-label">⚠️ تعارض مع أدويتك المحفوظة</div>
+                        <div class="ai-text">@Model.SavedMedConflicts</div>
+                    </div>
+                </div>
+            }
+
+            <!-- Condition warnings -->
+            @if (!string.IsNullOrEmpty(Model.ConditionWarnings) && Model.ConditionWarnings.Length > 5)
+            {
+                <div class="alert-info warning">
+                    <i class="fa-solid fa-heart-pulse ai-icon" style="color:#ffa502"></i>
+                    <div>
+                        <div class="ai-label">تحذير بناءً على حالتك الصحية</div>
+                        <div class="ai-text">@Model.ConditionWarnings</div>
+                    </div>
+                </div>
+            }
+
+            <!-- Pregnancy safety -->
+            @if (!string.IsNullOrEmpty(Model.PregnancySafety))
+            {
+                <div class="alert-info @(Model.PregnancySafety.Contains("ممنوع") || Model.PregnancySafety.Contains("خطر") ? "conflict" : "safe")">
+                    <i class="fa-solid fa-baby ai-icon" style="color:@(Model.PregnancySafety.Contains("ممنوع") || Model.PregnancySafety.Contains("خطر") ? "#ff6b9d" : "#00c9a7")"></i>
+                    <div>
+                        <div class="ai-label">الأمان أثناء الحمل</div>
+                        <div class="ai-text">@Model.PregnancySafety</div>
+                    </div>
+                </div>
+            }
+
+            <!-- Main info grid -->
+            <div class="info-grid">
+                @if (!string.IsNullOrEmpty(Model.Purpose))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(0,201,167,.15); color:#00c9a7">
+                                <i class="fa-solid fa-stethoscope"></i>
+                            </div>
+                            <div class="ic-title">الاستخدامات الطبية</div>
+                        </div>
+                        <div class="ic-body">@Model.Purpose</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Mechanism))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(99,179,237,.15); color:#63b3ed">
+                                <i class="fa-solid fa-atom"></i>
+                            </div>
+                            <div class="ic-title">آلية عمل الدواء</div>
+                        </div>
+                        <div class="ic-body">@Model.Mechanism</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.SideEffects))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(255,165,2,.15); color:#ffa502">
+                                <i class="fa-solid fa-circle-exclamation"></i>
+                            </div>
+                            <div class="ic-title">الآثار الجانبية</div>
+                        </div>
+                        <div class="ic-body">@Model.SideEffects</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Contraindications))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(255,71,87,.15); color:#ff4757">
+                                <i class="fa-solid fa-ban"></i>
+                            </div>
+                            <div class="ic-title">موانع الاستخدام</div>
+                        </div>
+                        <div class="ic-body">@Model.Contraindications</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.KeyInteractions))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(139,92,246,.15); color:#a78bfa">
+                                <i class="fa-solid fa-flask-vial"></i>
+                            </div>
+                            <div class="ic-title">التداخلات الدوائية المهمة</div>
+                        </div>
+                        <div class="ic-body">@Model.KeyInteractions</div>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.DosageNotes))
+                {
+                    <div class="info-card">
+                        <div class="ic-header">
+                            <div class="ic-icon" style="background:rgba(16,185,129,.15); color:#34d399">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                            </div>
+                            <div class="ic-title">ملاحظات عن الجرعات</div>
+                        </div>
+                        <div class="ic-body">@Model.DosageNotes</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px">
+                <a asp-action="Index" style="flex:1; min-width:160px; padding:13px; background:rgba(0,201,167,.12); border:1.5px solid rgba(0,201,167,.25); border-radius:11px; color:#00c9a7; text-decoration:none; font-size:.9rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .25s"
+                   onmouseover="this.style.background='rgba(0,201,167,.22)'" onmouseout="this.style.background='rgba(0,201,167,.12)'">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i> فحص تداخل هذا الدواء
+                </a>
+                <a asp-action="MyMedications" style="flex:1; min-width:160px; padding:13px; background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:11px; color:rgba(255,255,255,.8); text-decoration:none; font-size:.9rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .25s"
+                   onmouseover="this.style.background='rgba(255,255,255,.12)'" onmouseout="this.style.background='rgba(255,255,255,.06)'">
+                    <i class="fa-solid fa-pills"></i> أدويتي
+                </a>
+            </div>
+        }
+
+        <div style="margin-top:20px; padding:10px 14px; background:rgba(255,255,255,.03); border-radius:10px; color:rgba(255,255,255,.3); font-size:.76rem; display:flex; align-items:flex-start; gap:7px">
+            <i class="fa-solid fa-circle-info" style="margin-top:1px; flex-shrink:0"></i>
+            المعلومات المقدمة لأغراض توعوية فقط ولا تُغني عن استشارة طبيب أو صيدلاني مختص.
+        </div>
+    </div>
+</div>
