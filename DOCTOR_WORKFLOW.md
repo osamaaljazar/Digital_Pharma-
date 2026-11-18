@@ -32,7 +32,7 @@ The owner selected `osamaaljazar75@gmail.com`. The account must first exist; sel
 From `Digital_Pharma` (the web project folder), after creating the intended local account:
 
 ```powershell
-dotnet bin/Debug/net9.0/Digital_Pharma.dll --environment Development --grant-admin osamaaljazar75@gmail.com
+dotnet bin/Debug/net10.0/Digital_Pharma.dll --environment Development --grant-admin osamaaljazar75@gmail.com
 ```
 
 This explicitly updates one existing, uniquely matched account. It does not invent a password, seed a default privileged account, or accept an HTTP privilege-escalation request. Only a trusted operator with local deployment access should execute it. Production email verification/recovery is still tracked separately.

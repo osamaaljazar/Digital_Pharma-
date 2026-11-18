@@ -204,7 +204,7 @@ try
         RedirectStandardOutput = true, RedirectStandardError = true
     };
     var appConfiguration = args.Contains("--release-app") ? "Release" : "Debug";
-    start.ArgumentList.Add(Path.Combine(project, $"bin/{appConfiguration}/net9.0/Digital_Pharma.dll"));
+    start.ArgumentList.Add(Path.Combine(project, $"bin/{appConfiguration}/net10.0/Digital_Pharma.dll"));
     start.Environment["ASPNETCORE_ENVIRONMENT"] = "Development";
     start.Environment["ASPNETCORE_URLS"] = address;
     start.Environment["Gemini__ApiKey"] = ""; // Deterministic unavailable-source UI; never call paid AI in account checks.

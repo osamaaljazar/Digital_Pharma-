@@ -186,4 +186,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Auth}/{id?}");
 
+// Anonymous endpoint used by the container platform to verify that the process is healthy.
+app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+
 app.Run();
