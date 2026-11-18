@@ -1,0 +1,14 @@
+@{ ViewData["Title"]="بوابة الطبيب"; }
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+    <span class="eyebrow">DIGITAL PHARMA · بوابة الطبيب</span>
+    <h1>مرحباً، @User.Identity?.Name</h1>
+    <section class="panel">
+        <span class="status">حساب طبيب معتمد</span>
+        <h2 style="margin-top:24px">المتابعة المهنية تبدأ من هنا</h2>
+        <p class="muted">راجع طلبات المتابعة واقبلها لفتح بيانات المرضى الذين وافقوا على مشاركتها معك. الاطلاع متاح أثناء سريان الربط والاعتماد فقط.</p>
+        <a asp-controller="Care" asp-action="Patients" class="action">مرضاي وطلبات المتابعة</a>
+        <a asp-action="Status" class="action">عرض بيانات الاعتماد وسجل الطلب</a>
+    </section>
+</main>
+

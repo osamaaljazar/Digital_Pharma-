@@ -115,9 +115,13 @@
 
         @if (Model == null || Model.Count == 0)
         {
-            <div class="loading-state">
-                <i class="fa-solid fa-hourglass-half fa-spin"></i>
-                <p>جارٍ تحميل قائمة الأدوية...</p>
+            <div class="loading-state" role="status" data-state="unavailable">
+                <i class="fa-solid fa-circle-info"></i>
+                <h3>تعذر عرض قائمة الأدوية حالياً</h3>
+                <p>لم تُرجع خدمة المعلومات قائمة قابلة للعرض. انتهت المحاولة؛ لا يوجد تحميل جارٍ.</p>
+                <p>يمكنك إعادة المحاولة أو البحث عن نشرة دواء محدد.</p>
+                <a asp-action="PregnancyDrugs" class="btn btn-outline-light">إعادة المحاولة</a>
+                <a asp-controller="Medications" asp-action="Search" class="btn btn-outline-light">البحث عن نشرة دواء</a>
             </div>
         }
         else

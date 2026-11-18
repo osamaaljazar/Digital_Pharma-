@@ -1,0 +1,9 @@
+@model TreatmentSearch
+@{ViewData["Title"]="إضافة علاج للمريض";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css"/>
+<main class="workflow"><h1>إضافة علاج للمريض</h1><p>اختر المنتج المطابق بعد مراجعة هويته ونشرته، ثم أدخل الخطة التي قررتها للمريض.</p>
+<form method="get" class="panel"><input type="hidden" name="linkId" value="@Model.LinkId"/><label for="q">اسم الدواء أو المادة الفعالة</label><input id="q" name="q" value="@Model.Query" minlength="2" maxlength="100" required/><div class="actions"><button class="action">بحث</button><a asp-controller="Care" asp-action="Patient" asp-route-id="@Model.LinkId">العودة إلى المريض</a></div></form>
+@if(TempData["LabelError"] is string error){<p role="alert" class="panel">@error</p>}
+@if(Model.Lookup.Error!=null){<p role="alert" class="panel">@Model.Lookup.Error</p>}
+@foreach(var label in Model.Lookup.Labels){<section class="panel"><h2>@label.DisplayName</h2><p>@string.Join("، ",label.Names.Generic)</p><p>المواد: @string.Join("، ",label.Names.Substances)</p><p>المصنّع: @string.Join("، ",label.Names.Manufacturers) · طريق الاستخدام: @string.Join("، ",label.Names.Routes)</p><p>NDC: @string.Join("، ",label.Names.Ndc)</p><details><summary>بيانات التركيز والمادة من النشرة</summary><p class="note">@string.Join(" ",label.ActiveIngredient)</p></details><div class="actions"><a class="action" asp-action="Edit" asp-route-linkId="@Model.LinkId" asp-route-labelId="@label.Id">اختيار المنتج وإدخال الخطة</a><a href="@label.SourceUrl" target="_blank" rel="noopener noreferrer">قراءة النشرة</a></div></section>}
+<p class="muted">تغطية المصدر أمريكية وقد لا تشمل المنتج المحلي؛ لا تختَر منتجاً مختلفاً لمجرد تشابه الاسم.</p></main>

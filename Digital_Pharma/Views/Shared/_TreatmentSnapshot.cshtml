@@ -1,0 +1,2 @@
+@model TreatmentSnapshot
+<h3>@Model.DrugName</h3><dl><dt>الجرعة</dt><dd>@(Model.DoseAmount?.ToString("0.###")??"غير مسجلة") @MedicationCardInput.UnitName(Model.DoseUnit)</dd><dt>المواعيد</dt><dd>@(Model.ScheduleKind=="daily"?Model.DailyTimes:Model.ScheduleKind=="as_needed"?"عند الحاجة":"غير محددة / حسب التعليمات")</dd><dt>الحالة</dt><dd>@(Model.IsStopped?"متوقف":"مستمر")</dd><dt>التعليمات</dt><dd class="note">@(Model.Instructions??"غير مسجلة")</dd></dl>

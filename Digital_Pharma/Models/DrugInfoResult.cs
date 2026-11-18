@@ -13,6 +13,13 @@ namespace Digital_Pharma.Models
         public string SavedMedConflicts   { get; set; } = string.Empty;
         public string ConditionWarnings   { get; set; } = string.Empty;
         public string DosageNotes         { get; set; } = string.Empty;
+        public string FdaInteractions     { get; set; } = string.Empty;
+        public string EvidenceStatus      { get; set; } = "unavailable";
+        public string EvidenceNote        { get; set; } = string.Empty;
+        public string SourceSummary       { get; set; } = string.Empty;
+        public DateTimeOffset EvaluatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public bool AiAvailable           { get; set; }
+        public bool FdaAvailable          { get; set; }
 
         public bool Success               { get; set; } = true;
         public string? ErrorMessage       { get; set; }

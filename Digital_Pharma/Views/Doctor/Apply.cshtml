@@ -1,0 +1,23 @@
+@model DoctorApplicationInput
+@{ ViewData["Title"]="طلب اعتماد طبيب"; }
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+    <span class="eyebrow">DIGITAL PHARMA · الحساب المهني</span>
+    <h1>التقدم بطلب اعتماد طبيب</h1>
+    <p class="muted">أدخل معلوماتك المهنية بدقة. تقديم الطلب لا يمنحك صلاحيات الطبيب؛ تُفعّل بعد مراجعة المدير لهويتك وترخيصك.</p>
+    <form asp-controller="Doctor" asp-action="Apply" method="post" class="panel">
+        <div asp-validation-summary="All" role="alert"></div>
+        <input asp-for="Version" type="hidden" />
+        <div class="grid">
+            <div><label asp-for="FullName">الاسم الكامل كما في الترخيص</label><input asp-for="FullName" required maxlength="150" autocomplete="name" /></div>
+            <div><label asp-for="Specialization">التخصص</label><input asp-for="Specialization" required maxlength="150" /></div>
+            <div><label asp-for="LicenseNumber">رقم الترخيص المهني</label><input asp-for="LicenseNumber" required maxlength="100" /></div>
+            <div><label asp-for="Country">بلد الترخيص</label><input asp-for="Country" required maxlength="100" /></div>
+            <div><label asp-for="LicensingAuthority">الجهة المصدرة للترخيص</label><input asp-for="LicensingAuthority" required maxlength="200" /></div>
+            <div><label asp-for="ContactPhone">رقم التواصل المهني</label><input asp-for="ContactPhone" type="tel" required maxlength="30" autocomplete="tel" /></div>
+        </div>
+        <p class="muted">قد يطلب المدير استكمال معلومات التحقق. يمكنك متابعة حالة الطلب وملاحظاته من حسابك.</p>
+        <button class="action" type="submit">إرسال الطلب للمراجعة</button>
+    </form>
+</main>
+

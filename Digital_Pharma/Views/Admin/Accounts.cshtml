@@ -1,0 +1,14 @@
+@model AdminAccountsPage
+@{ViewData["Title"]="إدارة الحسابات";var now=DateTimeOffset.UtcNow;}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+ <span class="eyebrow">DIGITAL PHARMA · لوحة المدير</span><h1>إدارة الحسابات</h1>
+ <p class="muted">البحث وتقييد الدخول أو إعادة التفعيل وإبطال الجلسات. اعتماد الأطباء يبقى في صفحة منفصلة.</p>
+ <div class="top"><a asp-action="Index">طلبات الأطباء</a></div>
+ <form method="get" class="panel"><label>البحث<input name="q" value="@Model.Query" maxlength="100" placeholder="الاسم أو البريد"/></label><label>الحالة<select name="state"><option value="all" selected="@(Model.State=="all")">الكل</option><option value="active" selected="@(Model.State=="active")">فعال</option><option value="locked" selected="@(Model.State=="locked")">مقيد</option></select></label><button class="action">بحث</button></form>
+ <section class="panel table-wrap">
+ @if(Model.Users.Count==0){<p>لا توجد حسابات مطابقة.</p>}
+ @foreach(var account in Model.Users){var locked=account.LockoutEnd>now;<article data-account-id="@account.Id"><h2>@account.UserName</h2><p>@account.Email · @(Model.DoctorStatuses.TryGetValue(account.Id,out var doctorStatus)?$"طبيب: {DoctorStatusText.Label(doctorStatus)}":"مريض") · @(locked?"مقيد":"فعال")</p><form asp-action="AccountState" method="post"><input type="hidden" name="id" value="@account.Id"/><label>سبب الإجراء<textarea name="reason" minlength="3" maxlength="500" required></textarea></label><div class="actions">@if(locked){<button class="action" name="action" value="unlock">إعادة التفعيل</button>}else{<button class="action" name="action" value="lock">تقييد الدخول</button>}<button class="action secondary" name="action" value="revoke-sessions">إنهاء الجلسات</button></div></form></article>}
+ <div class="top">@if(Model.Page>1){<a asp-route-page="@(Model.Page-1)" asp-route-q="@Model.Query" asp-route-state="@Model.State">السابق</a>}<span>الصفحة @Model.Page</span>@if(Model.HasNext){<a asp-route-page="@(Model.Page+1)" asp-route-q="@Model.Query" asp-route-state="@Model.State">التالي</a>}</div>
+ </section>
+</main>

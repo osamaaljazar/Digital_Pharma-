@@ -1,6 +1,6 @@
-﻿@{
+@{
     ViewData["Title"] = "فحص التداخل الدوائي";
-    var userName = Context.Session.GetString("UserName") ?? "المستخدم";
+    var userName = User.Identity?.Name ?? "المستخدم";
 }
 
 @section HeadStyles {
@@ -146,10 +146,11 @@
 <div class="hero-section fade-up">
     <div class="container">
         <div class="badge-pill">
-            <i class="fa-solid fa-robot"></i> مدعوم بالذكاء الاصطناعي
+            <i class="fa-solid fa-shield-heart"></i> تحليل دوائي مساعد
         </div>
         <h1>فحص <span>التداخل الدوائي</span><br>بدقة وذكاء</h1>
-        <p>أدخل اسم الدوائين وسيحلّل الذكاء الاصطناعي التفاعل المحتمل بينهما مع مراعاة حالتك الصحية الخاصة</p>
+        <a asp-action="History" class="btn btn-outline-light mb-3"><i class="fa-solid fa-clock-rotate-left"></i> الفحوص السابقة</a>
+        <p>أدخل اسم الدواءين لمراجعة التفاعل المحتمل بينهما مع مراعاة المعلومات الصحية المسجلة</p>
 
         <div class="check-card">
             <form asp-action="CheckInteraction" method="post" id="checkForm">

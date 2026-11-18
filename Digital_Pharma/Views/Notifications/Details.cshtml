@@ -1,0 +1,7 @@
+@model TreatmentChangePage
+@{ViewData["Title"]="تفاصيل تعديل العلاج";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css"/>
+<main class="workflow"><h1>تفاصيل تعديل العلاج</h1><p>الطبيب: @Model.Change.DoctorName · @Model.Change.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") (عمّان)</p><section class="panel"><h2>سبب التغيير</h2><p class="note">@Model.Change.Reason</p></section>
+<div class="grid"><section class="panel"><h2>قبل التعديل</h2>@if(Model.Before==null){<p>إضافة دواء جديد.</p>}else{<partial name="_TreatmentSnapshot" model="Model.Before"/>}</section><section class="panel"><h2>بعد التعديل</h2><partial name="_TreatmentSnapshot" model="Model.After"/></section></div>
+<p class="muted">هذه نسخة تاريخية للتغيير؛ افتح «أدويتي» للاطلاع على الخطة الحالية. تأكيد الاطلاع لا يسجل تناول جرعة.</p>
+<div class="actions">@if(!(bool)ViewBag.IsRead){<form asp-action="Read" method="post"><input type="hidden" name="id" value="@ViewBag.NotificationId"/><button class="action">تأكيد الاطلاع</button></form>}<a class="action secondary" asp-controller="Home" asp-action="MyMedications">أدويتي</a><a asp-action="Index">جميع الإشعارات</a></div></main>

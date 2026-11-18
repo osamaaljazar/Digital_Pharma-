@@ -4,10 +4,11 @@ namespace Digital_Pharma.Models
     {
         public List<string> DrugNames { get; set; } = new();
         public List<DrugPairResult> Results { get; set; } = new();
-        public string OverallSeverity { get; set; } = "safe";
+        public string OverallSeverity { get; set; } = "unknown";
 
         public int DangerCount  => Results.Count(r => r.Severity is "serious" or "critical");
         public int SafeCount    => Results.Count(r => r.Severity is "safe");
+        public int UnknownCount => Results.Count(r => r.Severity is "unknown");
         public int TotalPairs   => Results.Count;
     }
 
@@ -21,5 +22,8 @@ namespace Digital_Pharma.Models
         public string Recommendation { get; set; } = "";
         public string SafeAlternatives { get; set; } = "";
         public bool InteractionFound { get; set; }
+        public string EvaluationStatus { get; set; } = "unavailable";
+        public string EvidenceNote { get; set; } = "";
+        public DateTimeOffset EvaluatedAt { get; set; }
     }
 }

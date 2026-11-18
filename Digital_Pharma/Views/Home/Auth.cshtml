@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "تسجيل الدخول";
     Layout = null;
 }
@@ -21,6 +21,9 @@
             padding: 20px;
             overflow-y: auto;
         }
+        .field-group select { display:block; width:100%; padding:12px 14px; border-radius:10px; border:1px solid #61728c; background:#263449; color:#fff; font:inherit; }
+        .field-group select:focus { outline:3px solid #2dd4bf; outline-offset:2px; }
+        .field-group small { display:block; color:#bac8da; line-height:1.7; margin-top:8px; }
         /* Static bg orbs — no animation for performance */
         .orb {
             position: fixed; border-radius: 50%; z-index: 0; pointer-events: none;
@@ -121,6 +124,18 @@
             position: absolute; top: 50%; transform: translateY(-50%);
             right: 14px; color: rgba(255,255,255,0.35); font-size: 0.9rem;
         }
+        .field-group .input-wrap .password-toggle {
+            position:absolute; left:8px; top:50%; transform:translateY(-50%);
+            width:36px; height:36px; display:grid; place-items:center;
+            border:0; border-radius:8px; background:transparent;
+            color:rgba(255,255,255,.55); cursor:pointer;
+        }
+        .field-group .input-wrap .password-toggle:hover,
+        .field-group .input-wrap .password-toggle:focus-visible { color:#6ee7d2; background:rgba(255,255,255,.08); outline:none; }
+        .field-group .input-wrap .password-toggle i { position:static; transform:none; color:inherit; font-size:1rem; }
+        .field-group .input-wrap input.has-password-toggle { padding-left:50px; }
+        .forgot-link { display:inline-block; color:#6ee7d2; font-size:.86rem; text-decoration:none; margin-top:9px; }
+        .forgot-link:hover { text-decoration:underline; }
         .field-group input {
             width: 100%; padding: 12px 40px 12px 14px;
             background: rgba(255,255,255,0.07);
@@ -181,11 +196,11 @@
                 <span>Digital Pharma</span>
             </div>
             <h2>نظام فحص التداخل الدوائي الذكي</h2>
-            <p>استعن بالذكاء الاصطناعي للكشف عن التفاعلات الخطيرة بين أدويتك قبل تناولها</p>
+            <p>راجع التفاعلات المحتملة بين أدويتك ضمن تجربة واضحة ومبسطة</p>
             <div class="features">
                 <div class="feature-item">
                     <div class="feat-icon"><i class="fa-solid fa-brain"></i></div>
-                    <span>تحليل بالذكاء الاصطناعي مع مراعاة حالتك الصحية</span>
+                    <span>تحليل مساعد يراعي معلوماتك الصحية المسجلة</span>
                 </div>
                 <div class="feature-item">
                     <div class="feat-icon"><i class="fa-solid fa-database"></i></div>
@@ -223,6 +238,12 @@
                     @TempData["SignupError"]
                 </div>
             }
+            @if (TempData["RecoverySuccess"] != null)
+            {
+                <div class="auth-alert" style="background:rgba(45,212,191,.14);color:#99f6e4;border:1px solid rgba(45,212,191,.3)">
+                    <i class="fa-solid fa-circle-check"></i>@TempData["RecoverySuccess"]
+                </div>
+            }
 
             <!-- LOGIN -->
             <div class="form-section active" id="tab-login">
@@ -233,15 +254,19 @@
                         <label>البريد الإلكتروني</label>
                         <div class="input-wrap">
                             <i class="fa-solid fa-envelope"></i>
-                            <input type="email" name="email" placeholder="example@email.com" required />
+                            <input type="email" name="email" autocomplete="username" placeholder="example@email.com" value="@TempData["LoginEmail"]" required />
                         </div>
                     </div>
                     <div class="field-group">
                         <label>كلمة المرور</label>
                         <div class="input-wrap">
                             <i class="fa-solid fa-lock"></i>
-                            <input type="password" name="password" placeholder="••••••••" required />
+                            <input class="has-password-toggle" id="login-password" type="password" name="password" autocomplete="current-password" maxlength="128" placeholder="••••••••" required />
+                            <button type="button" class="password-toggle" id="toggle-login-password" aria-label="إظهار كلمة المرور" aria-controls="login-password" aria-pressed="false">
+                                <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                            </button>
                         </div>
+                        <a class="forgot-link" asp-action="ForgotPassword">هل نسيت كلمة المرور؟</a>
                     </div>
                     <button type="submit" class="btn-submit">
                         <i class="fa-solid fa-right-to-bracket"></i> دخول
@@ -255,6 +280,10 @@
                 <h3>إنشاء حساب جديد</h3>
                 <p class="subtitle">انضم إلينا وابدأ في حماية صحتك</p>
                 <form asp-action="SignUp" method="post">
+                    <div class="field-group"><label for="accountType">نوع الحساب</label>
+                    <select name="accountType" id="accountType" class="form-select">
+                        <option value="patient">مريض</option><option value="doctor">التقدم بحساب طبيب</option>
+                    </select><small>حساب الطبيب يحتاج مراجعة واعتماد المدير قبل تفعيل صلاحياته.</small></div>
                     <div class="field-row">
                         <div class="field-group">
                             <label>الاسم</label>
@@ -282,7 +311,7 @@
                         <label>كلمة المرور</label>
                         <div class="input-wrap">
                             <i class="fa-solid fa-lock"></i>
-                            <input type="password" name="password" placeholder="8 أحرف على الأقل" required minlength="6" />
+                            <input type="password" name="password" autocomplete="new-password" placeholder="8 أحرف على الأقل" required minlength="8" maxlength="128" />
                         </div>
                     </div>
                     <div class="field-group">
@@ -302,6 +331,14 @@
     </div>
 
     <script>
+        document.getElementById('toggle-login-password').addEventListener('click', function () {
+            const input = document.getElementById('login-password');
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            this.setAttribute('aria-pressed', String(show));
+            this.setAttribute('aria-label', show ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور');
+            this.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        });
         function switchTab(tab, btn) {
             document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));

@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8" />
@@ -9,6 +10,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/navigation.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/assistant.css" asp-append-version="true" />
+    <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(Context).RequestToken" />
     <style>
         :root {
             --primary: #0d6efd;
@@ -129,45 +133,65 @@
         .alert-dp.warning { background: rgba(255,165,2,0.15);  color: var(--warning-clr); border: 1px solid rgba(255,165,2,0.3); }
     </style>
     @await RenderSectionAsync("HeadStyles", required: false)
+    <style>
+      .navbar-dp button.btn-logout{display:inline-flex;align-items:center;gap:8px;min-height:44px;border:1px solid #934f60;background:#382333;color:#ffc5ca;border-radius:10px;padding:9px 14px}.navbar-dp .user-badge{max-width:240px}.navbar-dp a:focus-visible,.navbar-dp button:focus-visible,.navbar-dp summary:focus-visible{outline:3px solid #8ce8d6;outline-offset:3px}
+      .med-list .med-item{gap:18px;min-width:0}.med-list .med-info{min-width:0;overflow-wrap:anywhere}.med-list .med-info>a{display:inline-flex;margin-block:10px;line-height:1.6;min-height:44px;align-items:center}.med-actions{flex-wrap:wrap;gap:12px!important;align-items:center}.add-card>.btn-add,.add-card>.btn-check-drug{display:inline-flex;align-items:center;justify-content:center;min-height:44px;max-width:100%;white-space:normal;margin:8px 0;margin-inline-end:14px;vertical-align:middle}
+      @@media(max-width:640px){.navbar-dp .brand{font-size:1.1rem}.med-item{flex-wrap:wrap}.med-actions{width:100%}.add-card>.btn-add,.add-card>.btn-check-drug{width:100%;margin:8px 0}}
+    </style>
 </head>
 <body>
     @{
-        var loggedIn = Context.Session.GetInt32("UserId") != null;
-        var userName = Context.Session.GetString("UserName") ?? "";
+        var loggedIn = User.Identity?.IsAuthenticated == true;
+        var userName = User.Identity?.Name ?? "";
+        var firstName = userName.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? userName;
+        var routeController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+        var routeAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+        string Active(string controller, params string[] actions) =>
+            routeController.Equals(controller, StringComparison.OrdinalIgnoreCase) &&
+            (actions.Length == 0 || actions.Any(a => routeAction.Equals(a, StringComparison.OrdinalIgnoreCase))) ? "active" : "";
     }
 
     @if (loggedIn)
     {
         <nav class="navbar-dp">
-            <div class="container d-flex align-items-center justify-content-between">
+            <div class="container nav-container">
+                <button class="menu-toggle" type="button" aria-label="فتح القائمة" aria-controls="main-navigation" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
                 <a asp-controller="Home" asp-action="Index" class="brand">
                     <div class="icon-wrap"><i class="fa-solid fa-pills"></i></div>
                     <span>Digital Pharma</span>
                 </a>
-                <div class="nav-links">
-                    <a asp-controller="Home" asp-action="Index">
-                        <i class="fa-solid fa-magnifying-glass-plus"></i> فحص الأدوية
-                    </a>
-                    <a asp-controller="Home" asp-action="MyMedications">
-                        <i class="fa-solid fa-pills"></i> أدويتي
-                    </a>
-                    <a asp-controller="Home" asp-action="DrugInfo" asp-route-name="">
-                        <i class="fa-solid fa-book-medical"></i> معلومات دواء
-                    </a>
-                    <a asp-controller="Home" asp-action="History">
-                        <i class="fa-solid fa-clock-rotate-left"></i> السجل
-                    </a>
-                    <a asp-controller="Home" asp-action="Account">
-                        <i class="fa-solid fa-user-circle"></i> حسابي
-                    </a>
-                    <div class="user-badge">
-                        <i class="fa-solid fa-circle-user"></i>
-                        @userName
+                <div class="nav-panel" id="main-navigation">
+                    <div class="primary-links">
+                    @if (User.IsInRole("Admin")) {
+                        <a class="nav-item @Active("Admin")" asp-controller="Admin" asp-action="Index"><i class="fa-solid fa-user-shield"></i> إدارة طلبات الأطباء</a>
+                    } else if (User.IsInRole("Doctor")) {
+                        <a class="nav-item @Active("Doctor","Dashboard")" asp-controller="Doctor" asp-action="Dashboard">بوابة الطبيب</a>
+                        <a class="nav-item @Active("Care","Patients","Patient")" asp-controller="Care" asp-action="Patients">مرضاي</a>
+                        <a class="nav-item @Active("Doctor","Status")" asp-controller="Doctor" asp-action="Status">بيانات الاعتماد</a>
+                    } else if (User.IsInRole("DoctorApplicant")) {
+                        <a class="nav-item @Active("Doctor")" asp-controller="Doctor" asp-action="Status">حالة طلب الاعتماد</a>
+                    } else {
+                        <a class="nav-item @Active("Home","Index","Result","MultiCheck","MultiResult","History")" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-magnifying-glass-plus"></i> فحص الأدوية</a>
+                        <a class="nav-item @Active("Home","DrugInfo")" asp-controller="Home" asp-action="DrugInfo" asp-route-name=""><i class="fa-solid fa-book-medical"></i> البحث عن دواء</a>
+                        <a class="nav-item @Active("Health")" asp-controller="Health" asp-action="Index"><i class="fa-solid fa-heart-pulse"></i> صحتي</a>
+                        <a class="nav-item @(Active("Home","MyMedications") + Active("Doses") + Active("Medications"))" asp-controller="Home" asp-action="MyMedications"><i class="fa-solid fa-pills"></i> أدويتي</a>
+                        <a class="nav-item @Active("Care","Index")" asp-controller="Care" asp-action="Index"><i class="fa-solid fa-user-doctor"></i> طبيبي</a>
+                        <a class="nav-item @Active("Reports")" asp-controller="Reports" asp-action="Index"><i class="fa-solid fa-file-medical"></i> تقرير الطبيب</a>
+                    }
                     </div>
-                    <a asp-controller="Home" asp-action="Logout" class="btn-logout">
-                        <i class="fa-solid fa-right-from-bracket"></i> خروج
-                    </a>
+                    <div class="nav-account-actions">
+                    @if(User.IsInRole("Patient")) {
+                        <a class="user-badge account-link" asp-controller="Home" asp-action="Account" aria-label="فتح معلومات الحساب" title="معلومات الحساب"><i class="fa-solid fa-circle-user"></i> @firstName</a>
+                    } else {
+                        <div class="user-badge account-link"><i class="fa-solid fa-circle-user"></i> @userName</div>
+                    }
+                        <form class="logout-form" asp-controller="Home" asp-action="Logout" method="post" style="margin:0">
+                            <button type="submit" class="btn-logout" style="font:inherit;cursor:pointer"><i class="fa-solid fa-right-from-bracket"></i> خروج</button>
+                        </form>
+                    </div>
                 </div>
+                @if(User.IsInRole("Patient")){@await Component.InvokeAsync("NotificationLink")}
+                <button class="nav-overlay" type="button" aria-label="إغلاق القائمة"></button>
             </div>
         </nav>
     }
@@ -197,8 +221,43 @@
         </div>
     </footer>
 
+    @if (loggedIn && User.IsInRole("Patient"))
+    {
+        @await Html.PartialAsync("_AiAssistant", $"{routeController}/{routeAction}")
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/assistant.js" asp-append-version="true" defer></script>
+    <script>
+      (() => {
+        const toggle = document.querySelector('.menu-toggle');
+        const overlay = document.querySelector('.nav-overlay');
+        const closeNavigation = () => {
+          document.body.classList.remove('nav-open');
+          toggle?.setAttribute('aria-expanded', 'false');
+        };
+        toggle?.addEventListener('click', () => {
+          const open = document.body.classList.toggle('nav-open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+        overlay?.addEventListener('click', closeNavigation);
+        document.querySelectorAll('.primary-links a').forEach(link => link.addEventListener('click', closeNavigation));
+        document.addEventListener('keydown', event => { if (event.key === 'Escape') closeNavigation(); });
+
+        const toast = document.querySelector('.doctor-toast');
+        if (toast) {
+          document.body.appendChild(toast);
+          const key = `digital-pharma-doctor-notification-${toast.dataset.notificationId}`;
+          if (!sessionStorage.getItem(key)) {
+            requestAnimationFrame(() => toast.classList.add('show'));
+            sessionStorage.setItem(key, 'shown');
+            window.setTimeout(() => toast.classList.remove('show'), 9000);
+          }
+          toast.querySelector('.doctor-toast-close')?.addEventListener('click', () => toast.classList.remove('show'));
+        }
+      })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -26,16 +26,23 @@ namespace Digital_Pharma.Models
         [Required]
         public DateTime DateOfBirth { get; set; }
 
+        public bool IsAdmin { get; set; }
+        public bool IsDoctorApplicant { get; set; }
+
         // Patient Profile
         public string? Gender { get; set; }             // "male" or "female"
         public string? MedicalConditions { get; set; }  // comma-separated or free text
         public bool? IsMarried { get; set; }            // null = not answered
         public bool? IsPregnant { get; set; }           // null = not applicable
+        public string? HealthNotes { get; set; }
+        public DateTimeOffset? HealthUpdatedAt { get; set; }
+        [Timestamp] public byte[] HealthRowVersion { get; set; } = [];
         public bool ProfileCompleted { get; set; } = false;
 
         public bool EmailConfirmed { get; set; } = false;
         public bool TwoFactorEnabled { get; set; } = false;
         public DateTimeOffset? LockoutEnd { get; set; }
+        public int SessionVersion { get; set; }
 
         [NotMapped]
         public int Age => DateTime.Today.Year - DateOfBirth.Year -

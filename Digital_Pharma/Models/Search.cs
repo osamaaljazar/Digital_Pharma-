@@ -26,7 +26,18 @@ namespace Digital_Pharma.Models
         public string? PatientContext { get; set; } // snapshot of patient profile at time of search
 
         public string? SafeAlternatives { get; set; }
+        // Legacy column retained for schema compatibility; new links store only a SHA-256 fingerprint.
         public string? ShareToken { get; set; }
+        [MaxLength(32)] public byte[]? ShareTokenHash { get; set; }
+        public DateTimeOffset? ShareExpiresAt { get; set; }
+        public DateTimeOffset? ShareRevokedAt { get; set; }
+
+        public Guid? CheckGroupId { get; set; }
+        [MaxLength(20)] public string CheckKind { get; set; } = "pair";
+        [MaxLength(20)] public string EvidenceStatus { get; set; } = "legacy";
+        public string? EvidenceNote { get; set; }
+        public string? SourceSummary { get; set; }
+        public DateTimeOffset? EvaluatedAt { get; set; }
 
         public DateTime SearchDate { get; set; } = DateTime.Now;
 

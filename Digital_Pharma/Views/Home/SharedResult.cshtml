@@ -162,10 +162,11 @@
         }
         else
         {
+            var sharedResult = Model!;
             <div class="drugs-banner">
                 <div class="drug-pill">
                     <div class="dp-label">الدواء الأول</div>
-                    <div class="dp-name">@Model.Drug1Name</div>
+                    <div class="dp-name">@sharedResult.Drug1Name</div>
                 </div>
                 <div class="vs-con">
                     <div class="vl"></div>
@@ -174,7 +175,7 @@
                 </div>
                 <div class="drug-pill">
                     <div class="dp-label">الدواء الثاني</div>
-                    <div class="dp-name">@Model.Drug2Name</div>
+                    <div class="dp-name">@sharedResult.Drug2Name</div>
                 </div>
             </div>
 
@@ -189,32 +190,32 @@
                         @(sevLabels[sev])
                     </div>
                     <div class="rc-title" style="color:@(sevColors[sev])">
-                        @(Model.InteractionFound ? "تم اكتشاف تداخل دوائي" : "لم يُكتشف تداخل خطير")
+                        @(sharedResult.InteractionFound ? "تم اكتشاف تداخل دوائي" : "لم يُكتشف تداخل خطير")
                     </div>
-                    <div class="rc-summary">@Model.ResultMessage</div>
-                    <div class="meta"><i class="fa-regular fa-calendar"></i> @Model.SearchDate.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div class="rc-summary">@sharedResult.ResultMessage</div>
+                    <div class="meta"><i class="fa-regular fa-calendar"></i> @sharedResult.SearchDate.ToString("dd/MM/yyyy HH:mm")</div>
                 </div>
             </div>
 
-            @if (!string.IsNullOrEmpty(Model.AiAnalysis))
+            @if (!string.IsNullOrEmpty(sharedResult.AiAnalysis))
             {
                 <div class="info-section">
                     <div class="is-title"><i class="fa-solid fa-microscope" style="color:#63b3ed"></i> التفاصيل الطبية</div>
-                    <div class="is-text">@Model.AiAnalysis</div>
+                    <div class="is-text">@sharedResult.AiAnalysis</div>
                 </div>
             }
-            @if (!string.IsNullOrEmpty(Model.Recommendation))
+            @if (!string.IsNullOrEmpty(sharedResult.Recommendation))
             {
                 <div class="info-section">
                     <div class="is-title"><i class="fa-solid fa-clipboard-check" style="color:#00c9a7"></i> التوصية</div>
-                    <div class="is-text">@Model.Recommendation</div>
+                    <div class="is-text">@sharedResult.Recommendation</div>
                 </div>
             }
-            @if (!string.IsNullOrEmpty(Model.SafeAlternatives))
+            @if (!string.IsNullOrEmpty(sharedResult.SafeAlternatives))
             {
                 <div class="info-section" style="background:rgba(0,201,167,.06); border-color:rgba(0,201,167,.18)">
                     <div class="is-title"><i class="fa-solid fa-lightbulb" style="color:#00c9a7"></i> البديل الآمن المقترح</div>
-                    <div class="is-text" style="color:#00c9a7">@Model.SafeAlternatives</div>
+                    <div class="is-text" style="color:#00c9a7">@sharedResult.SafeAlternatives</div>
                 </div>
             }
 

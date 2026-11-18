@@ -1,0 +1,37 @@
+@model MedicationCardInput
+@{ViewData["Title"]="بطاقة الدواء";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+ <h1>بطاقة الدواء</h1><h2>@Model.DrugName</h2>
+ <p class="muted">سجّل البيانات كما وردت في وصفتك أو على العبوة. هذه الصفحة تحفظ تعليماتك ولا تحدد جرعة علاجية.</p>
+ <form asp-action="Edit" method="post" class="panel">
+  <div asp-validation-summary="All" role="alert"></div>
+  <input asp-for="Id" type="hidden" /><input asp-for="Version" type="hidden" />
+  <h2>الجرعة والمواعيد</h2>
+  <div class="grid">
+   <div><label asp-for="DoseAmount">مقدار الجرعة الواحدة</label><input asp-for="DoseAmount" type="number" min="0.001" max="999999.999" step="0.001" placeholder="حسب الوصفة" /></div>
+   <div><label asp-for="DoseUnit">وحدة الجرعة</label><select asp-for="DoseUnit"><option value="">غير محددة</option>@foreach(var unit in MedicationCardInput.Units){<option value="@unit.Key">@unit.Value</option>}</select></div>
+   <div><label asp-for="ScheduleKind">نوع المواعيد</label><select asp-for="ScheduleKind"><option value="unspecified">لم أحدد المواعيد</option><option value="daily">مواعيد يومية ثابتة</option><option value="as_needed">عند الحاجة حسب الوصفة</option></select></div>
+   <div><label asp-for="DailyTimes">المواعيد اليومية — بنظام 24 ساعة</label><input asp-for="DailyTimes" dir="ltr" maxlength="200" placeholder="08:00, 20:00" /><small>افصل المواعيد بفاصلة. اتركها فارغة عند اختيار نوع آخر.</small></div>
+  </div>
+  <p class="muted">المواعيد هنا حسب توقيت عمّان المستخدم في جدول أدوية اليوم. لا توجد تذكيرات تلقائية في هذه المرحلة. للوصفات ذات الأيام أو الجرعات المتغيرة، اترك المواعيد غير محددة واكتب التعليمات كاملة.</p>
+  <h2>الكمية والصلاحية</h2>
+  <div class="grid">
+   <div><label asp-for="Quantity">الكمية المتبقية</label><input asp-for="Quantity" type="number" min="0" max="999999.999" step="0.001" /><small>الصفر يعني نفاد الكمية؛ الفراغ يعني أنها غير مسجلة.</small></div>
+   <div><label asp-for="QuantityUnit">وحدة الكمية</label><select asp-for="QuantityUnit"><option value="">غير محددة</option>@foreach(var unit in MedicationCardInput.Units){<option value="@unit.Key">@unit.Value</option>}</select></div>
+   <div><label asp-for="ExpiryDate">تاريخ الصلاحية كما حددته من العبوة</label><input asp-for="ExpiryDate" type="date" /><small>اتركه فارغاً إذا لم تتأكد من التاريخ.</small></div>
+   <div><label asp-for="Status">حالة الدواء في سجلك</label><select asp-for="Status"><option value="active">مستمر</option><option value="stopped">متوقف — محفوظ في الأرشيف</option></select></div>
+  </div>
+  <label asp-for="Instructions">تعليمات الاستخدام من الوصفة</label><textarea asp-for="Instructions" maxlength="1000" rows="3"></textarea>
+  <label asp-for="Notes">ملاحظات إضافية</label><textarea asp-for="Notes" maxlength="1000" rows="2"></textarea>
+  <label asp-for="ChangeReason">سبب الحفظ أو التغيير</label><input asp-for="ChangeReason" required maxlength="500" placeholder="مثلاً: تسجيل بيانات الوصفة لأول مرة" />
+  <p class="muted">تغيير الحالة يسجّل ما تفعله فعلياً، ولا يُعد توصية بإيقاف الدواء أو استئنافه. يُخصم المخزون عند تسجيل تناول الجرعة فقط إذا تطابقت وحدة الجرعة مع وحدة الكمية.</p>
+  <button class="action" type="submit">حفظ بطاقة الدواء</button>
+  <a asp-controller="Home" asp-action="MyMedications">العودة إلى أدويتي</a>
+ </form>
+ <section class="panel"><h2>آخر التغييرات على البطاقة</h2>
+ @if(Model.History.Count==0){<p>لم تُسجّل تعديلات على البطاقة بعد.</p>}
+ @foreach(var change in Model.History){<article><strong>@change.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") (عمّان)</strong><p>@change.Reason</p></article>}
+ <p class="muted">يعرض آخر 20 عملية حفظ. حذف الدواء نهائياً يحذف سجل بطاقته؛ استخدم حالة «متوقف» للاحتفاظ به.</p>
+ </section>
+</main>

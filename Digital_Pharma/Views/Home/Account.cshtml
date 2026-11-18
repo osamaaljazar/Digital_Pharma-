@@ -1,4 +1,4 @@
-﻿@model Digital_Pharma.Models.User
+@model Digital_Pharma.Models.User
 @{
     ViewData["Title"] = "حسابي";
     var genderLabel = Model?.Gender == "female" ? "أنثى" : (Model?.Gender == "male" ? "ذكر" : "غير محدد");
@@ -209,6 +209,24 @@
                 <div class="as-num">@ViewBag.MedCount</div>
                 <div class="as-lbl">أدوية محفوظة</div>
             </div>
+            <div class="acc-stat">
+                <div class="as-icon" style="background:rgba(255,165,2,.15);color:#fbbf24"><i class="fa-solid fa-bell"></i></div>
+                <div class="as-num">@ViewBag.AlertCount</div><div class="as-lbl">تنبيهات حالية</div>
+            </div>
+            <div class="acc-stat">
+                <div class="as-icon" style="background:rgba(0,201,167,.15);color:#00c9a7"><i class="fa-solid fa-check"></i></div>
+                <div class="as-num">@ViewBag.TakenCount</div><div class="as-lbl">جرعات متناولة خلال 7 أيام</div>
+            </div>
+            <div class="acc-stat">
+                <div class="as-icon" style="background:rgba(96,165,250,.15);color:#60a5fa"><i class="fa-regular fa-clock"></i></div>
+                <div class="as-num" style="font-size:1rem">@(ViewBag.NextDose??"لا توجد")</div><div class="as-lbl">الجرعة القادمة اليوم</div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="sc-title"><i class="fa-solid fa-stethoscope"></i> ملخص المتابعة</div>
+            <div class="info-row"><div class="ir-icon"><i class="fa-solid fa-user-doctor"></i></div><div><div class="ir-label">الطبيب المتابع</div><div class="ir-value">@(ViewBag.DoctorName??"لا يوجد ربط فعّال")</div></div></div>
+            <div class="info-row"><div class="ir-icon"><i class="fa-solid fa-forward"></i></div><div><div class="ir-label">جرعات متخطاة خلال 7 أيام</div><div class="ir-value">@ViewBag.SkippedCount</div></div></div>
         </div>
 
         <!-- Account info -->
@@ -250,51 +268,9 @@
         <!-- Health profile editor -->
         <div class="section-card">
             <div class="sc-title"><i class="fa-solid fa-heart-pulse"></i> الملف الصحي</div>
-            <form asp-action="UpdateProfile" method="post">
-                <div class="edit-field">
-                    <label><i class="fa-solid fa-venus-mars"></i> الجنس</label>
-                    <select name="gender" id="genderSel">
-                        <option value="male"   selected="@(Model?.Gender == "male"   ? "selected" : null)">ذكر</option>
-                        <option value="female" selected="@(Model?.Gender == "female" ? "selected" : null)">أنثى</option>
-                    </select>
-                </div>
+            <p>حدّث الحالات الصحية والحساسيات وراجع علاقتها بالمواد الفعالة في أدويتك.</p>
+            <a class="btn-save" asp-controller="Health" asp-action="Index">فتح الملف الصحي</a>
 
-                <!-- Marriage status (female only) -->
-                <div class="pregnant-row @(Model?.Gender == "female" ? "visible" : "")" id="marriedRow"
-                     style="background:rgba(139,92,246,0.07); border-color:rgba(139,92,246,0.18); margin-bottom:8px">
-                    <span style="color:rgba(255,255,255,0.65); font-size:0.88rem"><i class="fa-solid fa-ring" style="color:#a78bfa"></i> متزوجة؟</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="isMarried" id="marriedChk"
-                               value="true" @(Model?.IsMarried == true ? "checked" : "") />
-                        <span class="toggle-slider" style=""></span>
-                    </label>
-                    <span id="mrLabel" style="color:rgba(255,255,255,0.55); font-size:0.85rem">
-                        @(Model?.IsMarried == true ? "نعم" : "لا")
-                    </span>
-                </div>
-
-                <div class="pregnant-row @(Model?.Gender == "female" && Model?.IsMarried == true ? "visible" : "")" id="pregnantRow">
-                    <span style="color:rgba(255,255,255,0.65); font-size:0.88rem"><i class="fa-solid fa-baby" style="color:#ff6b9d"></i> حامل؟</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" name="isPregnant" id="pregnantChk"
-                               value="true" @(Model?.IsPregnant == true ? "checked" : "") />
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span id="pgLabel" style="color:rgba(255,255,255,0.55); font-size:0.85rem">
-                        @(Model?.IsPregnant == true ? "نعم" : "لا")
-                    </span>
-                </div>
-
-                <div class="edit-field">
-                    <label><i class="fa-solid fa-notes-medical"></i> الأمراض المزمنة أو الحالات الصحية</label>
-                    <textarea name="medicalConditions" rows="3"
-                              placeholder="مثال: السكري، ضغط الدم المرتفع، أمراض القلب...">@Model?.MedicalConditions</textarea>
-                </div>
-
-                <button type="submit" class="btn-save">
-                    <i class="fa-solid fa-floppy-disk"></i> حفظ التغييرات
-                </button>
-            </form>
         </div>
 
         <!-- Quick links -->
@@ -309,6 +285,7 @@
                    onmouseover="this.style.background='rgba(13,110,253,0.2)'" onmouseout="this.style.background='rgba(13,110,253,0.1)'">
                     <i class="fa-solid fa-clock-rotate-left"></i> سجل البحث
                 </a>
+                <a asp-action="Activity" style="display:flex;align-items:center;gap:8px;padding:11px 20px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);border-radius:10px;color:#c4b5fd;text-decoration:none;font-size:.88rem;font-weight:600"><i class="fa-solid fa-list-check"></i> سجل النشاط</a>
                 <a asp-action="MyMedications" style="display:flex; align-items:center; gap:8px; padding:11px 20px; background:rgba(255,165,2,0.1); border:1px solid rgba(255,165,2,0.25); border-radius:10px; color:#fbbf24; text-decoration:none; font-size:0.88rem; font-weight:600; transition:all 0.2s"
                    onmouseover="this.style.background='rgba(255,165,2,0.2)'" onmouseout="this.style.background='rgba(255,165,2,0.1)'">
                     <i class="fa-solid fa-pills"></i> أدويتي
@@ -317,37 +294,11 @@
                    onmouseover="this.style.background='rgba(255,107,157,0.2)'" onmouseout="this.style.background='rgba(255,107,157,0.1)'">
                     <i class="fa-solid fa-baby"></i> أدوية الحمل
                 </a>
-                <a asp-action="Logout" style="display:flex; align-items:center; gap:8px; padding:11px 20px; background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.25); border-radius:10px; color:#ff6b7a; text-decoration:none; font-size:0.88rem; font-weight:600; transition:all 0.2s"
+                <form asp-action="Logout" method="post" style="margin:0"><button type="submit" style="display:flex; align-items:center; gap:8px; padding:11px 20px; background:rgba(255,71,87,0.1); border:1px solid rgba(255,71,87,0.25); border-radius:10px; color:#ff6b7a; text-decoration:none; font-size:0.88rem; font-weight:600; transition:all 0.2s"
                    onmouseover="this.style.background='rgba(255,71,87,0.2)'" onmouseout="this.style.background='rgba(255,71,87,0.1)'">
                     <i class="fa-solid fa-right-from-bracket"></i> تسجيل الخروج
-                </a>
+                </button></form>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-<script>
-    document.getElementById('genderSel').addEventListener('change', function() {
-        var mr = document.getElementById('marriedRow');
-        var pr = document.getElementById('pregnantRow');
-        if (this.value === 'female') {
-            mr.classList.add('visible');
-        } else {
-            mr.classList.remove('visible');
-            pr.classList.remove('visible');
-            document.getElementById('marriedChk').checked = false;
-            document.getElementById('pregnantChk').checked = false;
-        }
-    });
-    document.getElementById('marriedChk').addEventListener('change', function() {
-        document.getElementById('mrLabel').textContent = this.checked ? 'نعم' : 'لا';
-        var pr = document.getElementById('pregnantRow');
-        if (this.checked) { pr.classList.add('visible'); }
-        else { pr.classList.remove('visible'); document.getElementById('pregnantChk').checked = false; }
-    });
-    document.getElementById('pregnantChk').addEventListener('change', function() {
-        document.getElementById('pgLabel').textContent = this.checked ? 'نعم' : 'لا';
-    });
-</script>
-}

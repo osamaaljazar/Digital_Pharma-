@@ -1,0 +1,59 @@
+@model DosesPage
+@{
+    ViewData["Title"]="أدويتي - جرعات اليوم";
+    var next=Model.Slots.FirstOrDefault(s=>(s.Record==null || s.Record.Status=="unrecorded") && string.CompareOrdinal(s.Time,Model.NowTime)>=0);
+}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<link rel="stylesheet" href="~/css/patient-pages.css" asp-append-version="true" />
+
+<main class="patient-page">
+ <header class="patient-hero">
+  <div class="patient-hero-icon"><i class="fa-regular fa-clock"></i></div>
+  <div><h1>أدويتي</h1><p>سجّل جرعات اليوم بوضوح، وراجع ما تم تناوله أو تخطيه دون تغيير وصفتك.</p></div>
+  <span class="hero-chip"><i class="fa-solid fa-location-dot"></i> توقيت عمّان</span>
+ </header>
+
+ <nav class="medications-tabs" aria-label="أقسام أدويتي">
+  <a asp-controller="Home" asp-action="MyMedications"><i class="fa-solid fa-list"></i> قائمة أدويتي</a>
+  <a class="active" asp-controller="Doses" asp-action="Index" aria-current="page"><i class="fa-regular fa-clock"></i> جرعات اليوم</a>
+ </nav>
+
+ <section class="dose-overview">
+  <div class="dose-highlight"><small>تاريخ الجدول</small><strong>@Model.Day.ToString("yyyy-MM-dd")</strong></div>
+  <div class="dose-highlight"><small>الموعد القادم</small><strong>@(next==null?"لا توجد جرعة قادمة اليوم":next.Time+" — "+next.Medication.DrugName)</strong></div>
+  <div class="dose-highlight"><small>الالتزام المسجل خلال 7 أيام</small><strong>@(Model.RecordedAdherencePercent.HasValue?$"{Model.RecordedAdherencePercent:0}%":"لا توجد تسجيلات")</strong><span class="field-help">@Model.TakenLast7Days تم تناولها · @Model.SkippedLast7Days تم تخطيها</span></div>
+ </section>
+
+ <div class="card-actions">
+  <a class="primary-action" asp-controller="Medications" asp-action="Search"><i class="fa-solid fa-plus"></i> إضافة دواء</a>
+  <a class="secondary-action" asp-action="History"><i class="fa-solid fa-clock-rotate-left"></i> سجل الجرعات</a>
+  <a class="secondary-action" asp-controller="Home" asp-action="MyMedications"><i class="fa-solid fa-pen"></i> تعديل الأدوية والمواعيد</a>
+ </div>
+
+ <p class="field-help">الجدول يعرض المواعيد اليومية للأدوية المستمرة. مرور الموعد لا يعني تناول الجرعة أو تخطيها؛ تتغير الحالة فقط عند تسجيلك.</p>
+ @if(Model.UnscheduledCount>0){<div class="medical-card"><div class="section-heading"><span class="section-icon"><i class="fa-solid fa-circle-info"></i></span><h2>أدوية بلا مواعيد ثابتة</h2></div><p class="section-intro">@Model.UnscheduledCount دواء مستمر بلا مواعيد يومية مكتملة أو للاستخدام عند الحاجة؛ لا تُنشأ له جرعات تلقائية هنا.</p></div>}
+
+ @if(Model.Slots.Count==0){<div class="empty-clinical"><i class="fa-regular fa-calendar-xmark"></i><strong>لا توجد مواعيد يومية لعرضها</strong><p>أضف الجرعة والمواعيد من بطاقة الدواء لتظهر هنا.</p></div>}
+ else {
+  <div class="dose-timeline">
+  @foreach(var slot in Model.Slots){
+   var m=slot.Medication;var record=slot.Record;var future=string.CompareOrdinal(slot.Time,Model.NowTime)>0;
+   <article class="dose-entry">
+    <div class="dose-entry-head"><h3>@(record?.DrugName??m.DrugName)</h3><span class="dose-time">@slot.Time</span></div>
+    <p>الجرعة: @((record?.DoseAmount??m.DoseAmount)?.ToString("0.###")) @MedicationCardInput.UnitName(record?.DoseUnit??m.DoseUnit)</p>
+    @if(m.Quantity.HasValue){<p>المخزون المسجل: @m.Quantity.Value.ToString("0.###") @MedicationCardInput.UnitName(m.QuantityUnit) @if(!MedicationInsights.CanDeduct(m)){<span>· لا يُخصم تلقائياً لاختلاف الوحدة</span>}</p>}
+    @if(record==null && !string.IsNullOrWhiteSpace(m.Instructions)){<p>@m.Instructions</p>}
+    <span class="status-pill"><i class="fa-solid fa-circle"></i> @DoseStatus.Label(record?.Status??"unrecorded")</span>
+    <div class="card-actions">
+    @if(record!=null){<a class="secondary-action" asp-action="Correct" asp-route-id="@record.Id">تصحيح التسجيل</a>}
+    else if(future){<span class="field-help">يتاح التسجيل عند حلول الموعد.</span>}
+    else {<form asp-action="Record" method="post"><input type="hidden" name="medicationId" value="@m.Id" /><input type="hidden" name="day" value="@Model.Day.ToString("yyyy-MM-dd")" /><input type="hidden" name="time" value="@slot.Time" /><input type="hidden" name="version" value="@Convert.ToBase64String(m.RowVersion)" /><button class="primary-action" name="status" value="taken"><i class="fa-solid fa-check"></i> تم تناول الجرعة</button><button class="secondary-action" name="status" value="skipped">تخطي الجرعة</button></form>}
+    </div>
+   </article>
+  }
+  </div>
+ }
+
+ @if(Model.OtherRecords.Count>0){<section class="medical-card"><div class="section-heading"><span class="section-icon"><i class="fa-solid fa-box-archive"></i></span><h2>تسجيلات من مواعيد سابقة</h2></div><p class="section-intro">تبقى التسجيلات محفوظة عند تغيير الجدول أو إيقاف الدواء أو حذفه.</p>@foreach(var record in Model.OtherRecords){<p>@record.Time · @record.DrugName · @DoseStatus.Label(record.Status) <a asp-action="Correct" asp-route-id="@record.Id">تصحيح</a></p>}</section>}
+ <p class="field-help">عند تسجيل «تم تناولها» يُخصم المخزون فقط إذا تطابقت وحدة الجرعة مع وحدة الكمية. التصحيح يعكس الخصم تلقائياً. لا يقترح النظام جرعة تعويضية.</p>
+</main>

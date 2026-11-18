@@ -1,0 +1,36 @@
+@model List<Doctor>
+@{ ViewData["Title"]="إدارة طلبات الأطباء"; }
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+    <span class="eyebrow">DIGITAL PHARMA · لوحة المدير</span>
+    <h1>طلبات اعتماد الأطباء</h1>
+    <p class="muted">راجع البيانات وتحقق من الهوية والترخيص قبل منح الصلاحيات. جميع القرارات تحفظ في سجل الطلب.</p>
+    <div class="top"><a asp-action="Accounts">إدارة الحسابات</a></div>
+    <form method="get" class="panel">
+        <label for="status">تصفية الطلبات</label>
+        <select id="status" name="status">
+            <option value="">جميع الحالات</option>
+            @foreach(var state in Enum.GetValues<DoctorApplicationStatus>()) {
+                <option value="@state" selected="@(ViewBag.Status == state)">@DoctorStatusText.Label(state)</option>
+            }
+        </select>
+        <button class="action" type="submit">عرض الطلبات</button>
+    </form>
+    <section class="panel table-wrap">
+    @if(Model.Count==0) { <p class="muted">لا توجد طلبات تطابق هذا العرض.</p> }
+    else {
+        <table><thead><tr><th>الطبيب</th><th>التخصص والبلد</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>
+        @foreach(var doctor in Model) {
+            <tr><td>@doctor.FullName<br /><small>@doctor.User?.Email</small></td>
+            <td>@doctor.Specialization<br />@doctor.Country</td><td><span class="status">@DoctorStatusText.Label(doctor.Status)</span></td>
+            <td><a asp-action="Review" asp-route-id="@doctor.Id">مراجعة الطلب</a></td></tr>
+        }
+        </tbody></table>
+    }
+    <div class="top" style="margin-top:20px">
+        @if(ViewBag.Page>1) { <a asp-route-page="@(ViewBag.Page-1)" asp-route-status="@ViewBag.Status">الصفحة السابقة</a> }
+        <span>الصفحة @ViewBag.Page</span>
+        @if(ViewBag.HasNext) { <a asp-route-page="@(ViewBag.Page+1)" asp-route-status="@ViewBag.Status">الصفحة التالية</a> }
+    </div></section>
+</main>
+

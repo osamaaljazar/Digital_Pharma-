@@ -17,6 +17,9 @@ namespace Digital_Pharma.Models
         public string AiPatientNotes { get; set; } = string.Empty;
         public string AiSafeAlternatives { get; set; } = string.Empty;
         public bool AiSuccess { get; set; } = true;
+        public string EvaluationStatus { get; set; } = "unavailable";
+        public string EvidenceNote { get; set; } = string.Empty;
+        public DateTimeOffset EvaluatedAt { get; set; }
 
         // Saved medication conflicts
         public string AiSavedMedConflicts { get; set; } = string.Empty;

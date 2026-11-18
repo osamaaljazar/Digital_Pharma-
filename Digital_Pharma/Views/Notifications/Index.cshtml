@@ -1,0 +1,15 @@
+@model NotificationCenterPage
+@{ViewData["Title"]="الإشعارات";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css"/>
+<main class="workflow">
+ <h1>الإشعارات</h1><p>تنبيهات حالية مرتبطة بأدويتك وجرعاتك، إضافة إلى تغييرات الخطة التي أرسلها طبيبك.</p>
+ <section class="panel"><h2>يحتاج انتباهك الآن</h2>
+ @if(Model.CurrentAlerts.Count==0){<p>لا توجد تنبيهات حالية للمخزون أو الصلاحية أو جرعات اليوم.</p>}
+ @foreach(var alert in Model.CurrentAlerts){<article data-system-notification="@alert.Kind" data-priority="@alert.Priority" style="border-right:4px solid @(alert.Priority=="urgent"?"#ff6b7d":"#ffcf75");padding:12px 16px;margin:14px 0;background:#1e3048"><h3>@alert.Title</h3><p>@alert.Message</p><div class="actions"><a class="action secondary" asp-controller="@alert.ActionController" asp-action="@alert.Action">فتح الصفحة المرتبطة</a></div></article>}
+ </section>
+ <section class="panel"><h2>تحديثات الطبيب</h2>
+ @if(Model.TreatmentNotifications.Count==0){<p>لا توجد تحديثات من الطبيب في هذه الصفحة.</p>}
+ @foreach(var n in Model.TreatmentNotifications.Take(30)){<article><span class="status">@(n.ReadAt==null?"جديد":"تم الاطلاع")</span><h3>تحديث من الطبيب @n.Change.DoctorName</h3><p>@n.Change.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") · عمّان</p><p class="note">@n.Change.Reason</p><div class="actions"><a class="action" asp-action="Details" asp-route-id="@n.Id">عرض ما تغيّر</a></div></article>}
+ <div class="actions">@if(Model.Page>1){<a class="action secondary" asp-route-page="@(Model.Page-1)">السابق</a>}@if(Model.TreatmentNotifications.Count>30){<a class="action secondary" asp-route-page="@(Model.Page+1)">التالي</a>}</div>
+ </section>
+</main>

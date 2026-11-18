@@ -1,0 +1,24 @@
+@model CareLinksPage
+@{ViewData["Title"]="طبيبي";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow"><h1>طبيبي</h1>
+<p>اختر طبيباً معتمداً وأرسل طلب متابعة. يستطيع الاطلاع على ملفك بعد قبول الطلب فقط.</p>
+<section class="panel"><h2>نطاق الموافقة</h2><p>تتيح الموافقة للطبيب اسمك وتاريخ ميلادك والجنس وحالة الحمل والحالات الصحية والملاحظات والحساسيات، وقائمة الأدوية بما فيها المتوقفة والجرعات والتعليمات والكمية والصلاحية، وتنبيهات المراجعة وسجل الجرعات. الربط يمنح الاطلاع فقط. تعديل العلاج يحتاج موافقة إضافية منفصلة يمكنك سحبها.</p><p>يمكنك إلغاء الربط في أي وقت لمنع الوصول اللاحق. الإلغاء لا يمحو ما سبق للطبيب الاطلاع عليه. اسمك يظهر للطبيب مع طلبك قبل القبول.</p></section>
+<h2>طلباتي والأطباء المرتبطون</h2>
+@if(Model.Links.Count==0){<p>لا يوجد طلب متابعة بعد.</p>}
+@foreach(var link in Model.Links){<section class="panel"><h3>@link.Doctor.FullName</h3><p>@CareStatus.Label(link.Status) · الموافقة: @link.ConsentedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm")</p>
+@if(link.Doctor.Status!=DoctorApplicationStatus.Approved || !link.Doctor.IsVerified){<p>اعتماد الطبيب غير فعّال حالياً؛ لا يحق له فتح الملف.</p>}
+@if(link.Status=="active"){
+<div class="permission-box"><h4>صلاحية تعديل الخطة الدوائية</h4>
+@if(link.CanManageTreatment){<p>سمحت لهذا الطبيب بإضافة العلاج وتعديل جرعته ومواعيده وتعليماته وإيقافه، مع إشعارك بكل تغيير.</p><form asp-action="TreatmentPermission" method="post"><input type="hidden" name="id" value="@link.Id"/><input type="hidden" name="version" value="@Convert.ToBase64String(link.RowVersion)"/><input type="hidden" name="allow" value="false"/><div class="actions"><button class="action secondary">سحب صلاحية تعديل العلاج</button></div></form>}
+else{<form asp-action="TreatmentPermission" method="post"><input type="hidden" name="id" value="@link.Id"/><input type="hidden" name="version" value="@Convert.ToBase64String(link.RowVersion)"/><input type="hidden" name="allow" value="true"/><label class="check"><input type="checkbox" name="consent" value="true" required/><span>أوافق على أن يضيف هذا الطبيب أدويتي ويعدّل الجرعات والمواعيد والتعليمات ويوقف العلاج. سيظهر كل تغيير في إشعارات حسابي.</span></label><div class="actions"><button class="action">السماح بتعديل العلاج</button></div></form>}
+</div>}
+@if(link.Status is "pending" or "active"){<form asp-action="Revoke" method="post"><input type="hidden" name="id" value="@link.Id"/><input type="hidden" name="version" value="@Convert.ToBase64String(link.RowVersion)"/><button class="action">إلغاء الطلب / الربط وسحب الوصول</button></form>}
+</section>}
+<h2>اختيار طبيب معتمد</h2><form method="get" class="panel"><label for="q">الاسم أو التخصص</label><input id="q" name="q" value="@Model.Query" maxlength="100"/><button class="action">بحث</button></form>
+<p class="muted">يعرض البحث حتى 30 طبيباً؛ استخدم الاسم لتحديد النتائج.</p>
+@foreach(var doctor in Model.Doctors){var link=Model.Links.SingleOrDefault(l=>l.DoctorId==doctor.Id);<section class="panel"><h3>@doctor.FullName</h3><p>@doctor.Specialization · @doctor.Country · @doctor.LicensingAuthority · الترخيص: @doctor.LicenseNumber</p>
+@if(link==null || link.Status is "revoked" or "rejected"){<form asp-action="SendRequest" method="post"><input type="hidden" name="doctorId" value="@doctor.Id"/><input type="hidden" name="version" value="@(link==null?"":Convert.ToBase64String(link.RowVersion))"/><label class="check"><input type="checkbox" name="consent" value="true" required/><span>أوافق على مشاركة البيانات الموضحة أعلاه مع هذا الطبيب عند قبوله طلبي، حتى ألغي الربط.</span></label><button class="action">إرسال طلب المتابعة</button></form>}else{<p>@CareStatus.Label(link.Status)</p>}
+</section>}
+@if(Model.Doctors.Count==0){<p>لا يوجد طبيب معتمد مطابق للبحث.</p>}
+</main>

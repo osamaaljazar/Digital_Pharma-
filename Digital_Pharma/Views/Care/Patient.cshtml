@@ -1,0 +1,39 @@
+@model CarePatientPage
+@using Digital_Pharma.Services
+@{ViewData["Title"]="ملف المريض";var p=Model.Health.Profile;}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow"><h1>ملف المريض — @p.UserName</h1><p>الوصول وفق موافقة المريض. هذه معلومات مسجلة في حسابه؛ لم تُراجع صحتها سريرياً تلقائياً.</p><a asp-action="Patients">العودة إلى المرضى</a>
+<section class="panel"><h2>الملف الصحي</h2><p>الميلاد: @p.DateOfBirth.ToString("yyyy-MM-dd") · الجنس: @(p.Gender=="female"?"أنثى":p.Gender=="male"?"ذكر":"غير محدد") · الحمل: @(p.IsPregnant==true?"حامل":p.IsPregnant==false?"غير حامل":"غير محدد / لا ينطبق")</p>
+@foreach(var condition in HealthCatalog.Conditions.Where(c=>p.ConditionCodes.Contains(c.Code))){<p>@condition.Name</p>}
+@if(p.ConditionCodes.Count==0){<p>لا توجد حالات منظمة مسجلة؛ لا يعني ذلك عدم وجود أمراض.</p>}<p>@p.OtherNotes</p>
+<h3>الحساسيات</h3>@foreach(var allergy in Model.Health.Allergies){<p>@allergy.Name · @allergy.Reaction · الشدة المبلغ عنها: @(allergy.ReportedSeverity=="severe"?"شديد":allergy.ReportedSeverity=="mild"?"خفيف":"غير معروفة")</p>}
+@if(Model.Health.Allergies.Count==0){<p>لا توجد حساسيات مسجلة؛ لا يعني ذلك التأكد من عدم وجود حساسية.</p>}</section>
+<section class="panel"><h2>الأدوية المسجلة</h2>
+@if(Model.CanManageTreatment){<div class="actions"><a class="action" asp-controller="Treatment" asp-action="Search" asp-route-linkId="@Model.LinkId">إضافة علاج للمريض</a></div>}else{<p class="muted">الاطلاع فقط؛ لم يمنح المريض صلاحية تعديل العلاج.</p>}
+@foreach(var m in Model.Health.Medications){<article><h3>@m.DrugName · @(m.IsStopped?"متوقف":"مستمر")</h3><p>الجرعة: @(m.DoseAmount?.ToString("0.###")??"غير مسجلة") @MedicationCardInput.UnitName(m.DoseUnit)</p><p>المواعيد: @(m.ScheduleKind=="daily"?m.DailyTimes:m.ScheduleKind=="as_needed"?"عند الحاجة":"غير محددة")</p><p>الكمية: @(m.Quantity?.ToString("0.###")??"غير مسجلة") @MedicationCardInput.UnitName(m.QuantityUnit) · الصلاحية: @(m.ExpiryDate?.ToString("yyyy-MM-dd")??"غير مسجلة")</p><p>@m.Instructions</p><p>@m.Notes</p>@if(Model.CanManageTreatment){<div class="actions"><a class="action secondary" asp-controller="Treatment" asp-action="Edit" asp-route-linkId="@Model.LinkId" asp-route-id="@m.Id">تعديل الخطة / إيقاف العلاج</a></div>}</article>}
+@if(Model.Health.Medications.Count==0){<p>لا توجد أدوية مسجلة.</p>}</section>
+<partial name="_HealthReview" model="Model.Health.Review"/>
+<section class="panel" aria-labelledby="alert-decisions-title">
+<h2 id="alert-decisions-title">قرارات الطبيب على التنبيهات</h2>
+<p class="muted">وثّق مراجعتك لكل تنبيه وسبب القرار. لا يغيّر القرار علاج المريض تلقائياً، وتبقى تعديلات الخطة في المسار المخصص لها.</p>
+@foreach(var finding in Model.Health.Review.Findings.Where(f=>f.Priority is "urgent" or "review")){
+ var alertKey=ClinicalAlertDecision.Key(finding);
+ var latest=Model.AlertDecisions.FirstOrDefault(d=>d.AlertKey==alertKey);
+ <article data-clinical-alert="@alertKey">
+  <h3>@finding.Related</h3><p>@finding.Message</p>
+  @if(latest!=null){<p><strong>آخر قرار:</strong> @ClinicalAlertDecision.StatusLabel(latest.Status) · @latest.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm")</p><p>السبب: @latest.Reason</p>}
+  <form asp-action="RecordAlertDecision" method="post">
+   <input type="hidden" name="linkId" value="@Model.LinkId"/><input type="hidden" name="alertKey" value="@alertKey"/><input type="hidden" name="operationId" value="@Guid.NewGuid()"/>
+   <label>القرار<select name="status" required><option value="acknowledged">تمت المراجعة</option><option value="monitor">متابعة ومراقبة</option><option value="dismissed">لا ينطبق حالياً</option></select></label>
+   <label>سبب القرار<textarea name="reason" minlength="3" maxlength="500" required placeholder="اكتب سبباً مهنياً واضحاً"></textarea></label>
+   <div class="actions"><button class="action" type="submit">حفظ القرار</button></div>
+  </form>
+ </article>
+}
+@if(!Model.Health.Review.Findings.Any(f=>f.Priority is "urgent" or "review")){<p>لا توجد تنبيهات قابلة للقرار في المراجعة الحالية.</p>}
+</section>
+<section class="panel"><h2>سجل الجرعات — توقيت عمّان</h2>
+@foreach(var dose in Model.Doses.Take(50)){<p>@dose.Day.ToString("yyyy-MM-dd") @dose.Time · @dose.DrugName · @dose.DoseAmount.ToString("0.###") @MedicationCardInput.UnitName(dose.DoseUnit) · @DoseStatus.Label(dose.Status)</p>}
+@if(Model.Doses.Count==0){<p>لا توجد تسجيلات في هذه الصفحة.</p>}
+@if(Model.Page>1){<a asp-action="Patient" asp-route-id="@Model.LinkId" asp-route-page="@(Model.Page-1)">السابق</a>}
+@if(Model.Doses.Count>50){<a asp-action="Patient" asp-route-id="@Model.LinkId" asp-route-page="@(Model.Page+1)">التالي</a>}</section></main>

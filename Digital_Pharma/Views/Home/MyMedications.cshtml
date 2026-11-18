@@ -1,4 +1,4 @@
-@model List<Digital_Pharma.Models.UserMedication>
+@model MedicationDashboard
 @{
     ViewData["Title"] = "أدويتي";
 }
@@ -138,15 +138,20 @@
     }
 </style>
 }
+<link rel="stylesheet" href="~/css/patient-pages.css" asp-append-version="true" />
 
-<div class="meds-page fade-up">
-    <div class="container" style="max-width:800px">
+<div class="patient-page meds-page fade-up">
 
-        <div class="page-header">
-            <div class="ph-icon"><i class="fa-solid fa-pills"></i></div>
-            <h2>أدويتي</h2>
-            <p>سجّل الأدوية التي تتناولها بانتظام وسيُنبّهك النظام تلقائياً عند فحص أي دواء جديد يتعارض معها</p>
-        </div>
+        <header class="patient-hero">
+            <div class="patient-hero-icon"><i class="fa-solid fa-pills"></i></div>
+            <div><h1>أدويتي</h1><p>تابع جرعاتك وخطتك الحالية، واحتفظ بتفاصيل كل دواء في مكان واضح.</p></div>
+            <span class="hero-chip"><i class="fa-solid fa-shield-heart"></i> مراجعة صحية مساعدة</span>
+        </header>
+
+        <nav class="medications-tabs" aria-label="أقسام أدويتي">
+            <a class="active" asp-controller="Home" asp-action="MyMedications" aria-current="page"><i class="fa-solid fa-list"></i> قائمة أدويتي</a>
+            <a asp-controller="Doses" asp-action="Index"><i class="fa-regular fa-clock"></i> جرعات اليوم</a>
+        </nav>
 
         @if (TempData["MedError"] != null)
         {
@@ -165,51 +170,54 @@
         <div class="info-note">
             <i class="fa-solid fa-circle-info"></i>
             <span>
-                عندما تفحص أي دواء جديد في صفحة الفحص، سيتحقق الذكاء الاصطناعي تلقائياً من تعارضه مع كل الأدوية المحفوظة هنا وسيُظهر تحذيراً فورياً إذا وُجد خطر.
+                اربط الدواء بنشرته ومواده الفعالة لمراجعته وفق الحساسيات والحالات الصحية. التقييم جزئي، ولا يضمن غياب التنبيه سلامة الاستخدام.
             </span>
         </div>
 
         <!-- Add medication form -->
         <div class="add-card">
             <div class="ac-title"><i class="fa-solid fa-plus-circle"></i> إضافة دواء جديد</div>
-            <form asp-action="AddMedication" method="post">
-                <div class="add-row">
-                    <div class="fi-group">
-                        <label>اسم الدواء *</label>
-                        <input type="text" name="drugName" placeholder="مثال: Metformin, Lisinopril..." required autocomplete="off" />
-                    </div>
-                    <div class="fi-group">
-                        <label>ملاحظات (اختياري)</label>
-                        <input type="text" name="notes" placeholder="مثال: 500mg يومياً" />
-                    </div>
-                    <button type="submit" class="btn-add">
-                        <i class="fa-solid fa-plus"></i> إضافة
-                    </button>
-                </div>
-            </form>
+            <a class="btn-add" asp-controller="Medications" asp-action="Search">إضافة دواء</a>
+            <a class="btn-check-drug" asp-controller="Health" asp-action="Review">عرض مراجعة الأدوية الحالية</a>
+
         </div>
 
         <!-- Stats -->
-        @if (Model != null && Model.Count > 0)
+        @if (Model.Medications.Count > 0)
         {
-            <div class="stats-strip">
-                <div class="stat-chip">
-                    <div class="sc-num" style="color:#00c9a7">@Model.Count</div>
-                    <div class="sc-lbl">دواء محفوظ</div>
+            <div class="summary-grid">
+                <div class="summary-card"><i class="fa-solid fa-capsules"></i><div>
+                    <strong>@Model.Medications.Count(m => !m.IsStopped)</strong><span>دواء مستمر</span>
                 </div>
-                <div class="stat-chip">
-                    <div class="sc-num" style="color:#60a5fa">@Model.Count(m => m.Notes != null)</div>
-                    <div class="sc-lbl">مع ملاحظات</div>
                 </div>
-                <div class="stat-chip">
-                    <div class="sc-num" style="color:#fbbf24">@Model.Count(m => m.CreatedAt >= DateTime.Today.AddDays(-7))</div>
-                    <div class="sc-lbl">مضافة هذا الأسبوع</div>
+                <div class="summary-card"><i class="fa-solid fa-chart-line"></i><div>
+                    <strong>@(Model.RecordedAdherencePercent.HasValue?$"{Model.RecordedAdherencePercent:0}%":"—")</strong><span>الالتزام المسجل خلال 7 أيام</span>
+                </div>
+                </div>
+                <div class="summary-card"><i class="fa-solid fa-triangle-exclamation"></i><div>
+                    <strong>@(Model.LowStockCount + Model.ExpiryAlertCount)</strong><span>تنبيهات مخزون أو صلاحية</span>
+                </div>
                 </div>
             </div>
+            <p class="field-help">نسبة الالتزام تحسب الجرعات التي سجلتها فقط: @Model.TakenLast7Days تم تناولها و@Model.SkippedLast7Days تم تخطيها. المواعيد غير المسجلة لا تُفترض تلقائياً.</p>
         }
 
+        @if (ViewBag.HealthReview is HealthReview review) { <partial name="_HealthReview" model="review" /> }
+
+        @if (Model.Medications.Count > 0)
+        {
+            <section class="med-organizer" aria-labelledby="med-organizer-title">
+                <div class="organizer-heading"><div><h2 id="med-organizer-title">تنظيم القائمة</h2><p>ابحث أو رتّب أدويتك دون مغادرة الصفحة.</p></div><span id="med-visible-count" aria-live="polite">@Model.Medications.Count دواء</span></div>
+                <div class="organizer-controls">
+                    <div class="field organizer-search"><label for="med-search">البحث بالاسم</label><div class="search-input-wrap"><i class="fa-solid fa-magnifying-glass"></i><input id="med-search" type="search" placeholder="اكتب اسم الدواء" autocomplete="off" /></div></div>
+                    <div class="field"><label for="med-filter">عرض</label><select id="med-filter"><option value="all">كل الأدوية</option><option value="active">المستمرة</option><option value="stopped">المتوقفة</option><option value="stock-alert">منخفضة أو نافدة</option><option value="expiry-alert">قريبة أو منتهية الصلاحية</option></select></div>
+                    <div class="field"><label for="med-sort">الترتيب</label><select id="med-sort"><option value="newest">الأحدث إضافة</option><option value="name">الاسم</option><option value="stock">الأقل مخزوناً</option><option value="expiry">الأقرب صلاحية</option></select></div>
+                    <button id="med-organizer-reset" class="organizer-reset" type="button"><i class="fa-solid fa-rotate-left"></i> مسح</button>
+                </div>
+            </section>
+        }
         <!-- Medication list -->
-        @if (Model == null || Model.Count == 0)
+        @if (Model.Medications.Count == 0)
         {
             <div class="empty-state">
                 <div class="es-icon"><i class="fa-solid fa-prescription-bottle"></i></div>
@@ -218,34 +226,63 @@
         }
         else
         {
-            <div class="med-list">
-                @foreach (var med in Model)
+            <div class="med-list" id="med-list">
+                @{var medicationIndex=0;}
+                @foreach (var med in Model.Medications)
                 {
-                    <div class="med-item">
+                    var stockState=MedicationInsights.StockState(med);
+                    var expiryState=MedicationInsights.ExpiryState(med);
+                    var remainingDays=MedicationInsights.RemainingDays(med);
+                    <article class="med-item medication-card" data-medication-card data-name="@med.DrugName.ToLowerInvariant()" data-state="@(med.IsStopped?"stopped":"active")" data-stock-state="@stockState" data-expiry-state="@expiryState" data-stock="@(med.Quantity?.ToString(System.Globalization.CultureInfo.InvariantCulture)??"999999999")" data-expiry="@(med.ExpiryDate?.ToString("yyyy-MM-dd")??"9999-12-31")" data-original-order="@medicationIndex">
                         <div class="med-icon"><i class="fa-solid fa-capsules"></i></div>
                         <div class="med-info">
                             <div class="med-name">@med.DrugName</div>
-                            @if (!string.IsNullOrEmpty(med.Notes))
-                            {
-                                <div class="med-notes"><i class="fa-solid fa-note-sticky" style="margin-left:4px"></i>@med.Notes</div>
-                            }
-                            <div class="med-date"><i class="fa-regular fa-calendar" style="margin-left:4px"></i>أُضيف: @med.CreatedAt.ToString("dd/MM/yyyy")</div>
+                            <span class="status-pill @(med.IsStopped?"stopped":"")"><i class="fa-solid @(med.IsStopped?"fa-box-archive":"fa-circle-check")"></i> @(med.IsStopped?"متوقف — الأرشيف":"مستمر")</span>
+                            @if(!med.IsStopped && stockState=="empty"){<span class="med-alert danger"><i class="fa-solid fa-box-open"></i> نفد المخزون المسجل</span>}
+                            else if(!med.IsStopped && stockState=="low"){<span class="med-alert warning"><i class="fa-solid fa-box"></i> المخزون منخفض@(remainingDays.HasValue?$" — نحو {remainingDays:0.#} يوم":"")</span>}
+                            @if(!med.IsStopped && expiryState=="expired"){<span class="med-alert danger"><i class="fa-solid fa-calendar-xmark"></i> منتهي الصلاحية — لا تستخدمه قبل سؤال الصيدلي</span>}
+                            else if(!med.IsStopped && expiryState=="soon"){<span class="med-alert warning"><i class="fa-regular fa-calendar"></i> تنتهي الصلاحية خلال 30 يوماً</span>}
+                            <div class="med-overview">
+                                <div class="med-fact"><small>الجرعة</small><strong>@(med.DoseAmount.HasValue?med.DoseAmount.Value.ToString("0.###")+" "+MedicationCardInput.UnitName(med.DoseUnit):"غير مسجلة")</strong></div>
+                                <div class="med-fact"><small>المواعيد</small><strong>@(med.ScheduleKind=="daily"?med.DailyTimes:med.ScheduleKind=="as_needed"?"عند الحاجة":"غير محددة")</strong></div>
+                                <div class="med-fact"><small>الكمية</small><strong>@(med.Quantity.HasValue?med.Quantity.Value.ToString("0.###")+" "+MedicationCardInput.UnitName(med.QuantityUnit):"غير مسجلة")</strong></div>
+                            </div>
+                            <details class="med-details"><summary>التفاصيل والمصدر</summary><div class="med-details-content">
+                                <span>الصلاحية: @(med.ExpiryDate?.ToString("yyyy-MM-dd")??"غير مسجلة")</span>
+                                @if(!string.IsNullOrWhiteSpace(med.Instructions)){<span>التعليمات: @med.Instructions</span>}
+                                <span>@(med.LabelId==null ? "غير مرتبط بنشرة — التقييم غير مكتمل" : "مرتبط بنشرة؛ راجع المواد الفعالة والتنبيهات")</span>
+                                @if (!string.IsNullOrEmpty(med.Notes)){<span><i class="fa-solid fa-note-sticky"></i> @med.Notes</span>}
+                                <span><i class="fa-regular fa-calendar"></i> أُضيف: @med.CreatedAt.ToString("dd/MM/yyyy")</span>
+                                @if(med.Quantity.HasValue && med.DoseAmount.HasValue && !MedicationInsights.CanDeduct(med)){<span>الخصم التلقائي متوقف لأن وحدة الجرعة لا تطابق وحدة المخزون.</span>}
+                            </div></details>
+                            <details class="med-details restock-box"><summary><i class="fa-solid fa-boxes-stacked"></i> إضافة عبوة أو كمية جديدة</summary>
+                                <form asp-controller="Medications" asp-action="AddStock" method="post" class="restock-form">
+                                    <input type="hidden" name="Id" value="@med.Id" /><input type="hidden" name="Version" value="@Convert.ToBase64String(med.RowVersion)" />
+                                    <div class="field"><label for="amount-@med.Id">الكمية المضافة</label><input id="amount-@med.Id" name="Amount" type="number" min="0.001" max="999999.999" step="0.001" required /></div>
+                                    <div class="field"><label for="unit-@med.Id">الوحدة</label><select id="unit-@med.Id" name="Unit" required><option value="">اختر</option>@foreach(var unit in MedicationCardInput.Units){if(med.QuantityUnit==unit.Key){<option value="@unit.Key" selected>@unit.Value</option>}else{<option value="@unit.Key">@unit.Value</option>}}</select></div>
+                                    <input type="hidden" name="Reason" value="شراء عبوة جديدة" />
+                                    <button class="secondary-action" type="submit"><i class="fa-solid fa-plus"></i> تحديث المخزون</button>
+                                </form>
+                            </details>
+                            <div class="card-actions"><a class="secondary-action" asp-controller="Medications" asp-action="Edit" asp-route-id="@med.Id"><i class="fa-solid fa-pen"></i> تعديل البطاقة</a><a class="secondary-action" asp-controller="Medications" asp-action="Search" asp-route-medicationId="@med.Id" asp-route-q="@med.DrugName"><i class="fa-solid fa-link"></i> تحديث النشرة</a></div>
                         </div>
                         <div class="med-actions">
                             <a href="/Home/DrugInfo?name=@Uri.EscapeDataString(med.DrugName)" class="btn-check-drug">
                                 <i class="fa-solid fa-book-medical"></i> معلومات
                             </a>
                             <form asp-action="DeleteMedication" method="post" style="margin:0"
-                                  onsubmit="return confirm('هل تريد حذف @med.DrugName من قائمتك؟')">
+                                  onsubmit="return confirm('هل تريد حذف هذا الدواء من قائمتك؟')">
                                 <input type="hidden" name="id" value="@med.Id" />
                                 <button type="submit" class="btn-del-med">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </form>
                         </div>
-                    </div>
+                    </article>
+                    medicationIndex++;
                 }
             </div>
+            <div class="empty-clinical organizer-empty" id="med-organizer-empty" hidden><i class="fa-solid fa-filter-circle-xmark"></i><strong>لا توجد أدوية مطابقة</strong><p>جرّب كلمة أخرى أو امسح التصفية.</p></div>
         }
 
         <!-- Bottom links -->
@@ -257,5 +294,46 @@
                 <i class="fa-solid fa-baby"></i> أدوية الحمل الخطرة
             </a>
         </div>
-    </div>
 </div>
+
+@section Scripts {
+<script>
+(() => {
+    const list = document.getElementById('med-list');
+    if (!list) return;
+    const cards = [...list.querySelectorAll('[data-medication-card]')];
+    const search = document.getElementById('med-search');
+    const filter = document.getElementById('med-filter');
+    const sort = document.getElementById('med-sort');
+    const reset = document.getElementById('med-organizer-reset');
+    const count = document.getElementById('med-visible-count');
+    const empty = document.getElementById('med-organizer-empty');
+    const normalize = value => value.trim().toLocaleLowerCase('ar');
+    const apply = () => {
+        const term = normalize(search.value);
+        const selectedFilter = filter.value;
+        const visible = cards.filter(card => {
+            const matchesName = !term || normalize(card.dataset.name).includes(term);
+            const matchesFilter = selectedFilter === 'all' ||
+                card.dataset.state === selectedFilter ||
+                (selectedFilter === 'stock-alert' && ['low','empty'].includes(card.dataset.stockState)) ||
+                (selectedFilter === 'expiry-alert' && ['soon','expired'].includes(card.dataset.expiryState));
+            card.hidden = !(matchesName && matchesFilter);
+            return !card.hidden;
+        });
+        const compare = {
+            newest: (a,b) => Number(a.dataset.originalOrder) - Number(b.dataset.originalOrder),
+            name: (a,b) => a.dataset.name.localeCompare(b.dataset.name, 'ar'),
+            stock: (a,b) => Number(a.dataset.stock) - Number(b.dataset.stock),
+            expiry: (a,b) => a.dataset.expiry.localeCompare(b.dataset.expiry)
+        }[sort.value];
+        [...cards].sort(compare).forEach(card => list.appendChild(card));
+        count.textContent = `${visible.length} من ${cards.length}`;
+        empty.hidden = visible.length !== 0;
+    };
+    [search, filter, sort].forEach(control => control.addEventListener('input', apply));
+    reset.addEventListener('click', () => { search.value=''; filter.value='all'; sort.value='newest'; apply(); search.focus(); });
+    apply();
+})();
+</script>
+}

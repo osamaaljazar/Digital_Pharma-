@@ -1,0 +1,15 @@
+@model Digital_Pharma.Models.ShareManagementPage
+@{ViewData["Title"]="إدارة مشاركة النتيجة";}
+<div class="container py-5" style="max-width:760px">
+ <div class="glass-card p-4 p-md-5">
+  <div class="d-flex align-items-center gap-3 mb-3"><i class="fa-solid fa-share-nodes fa-2x" style="color:var(--teal)"></i><div><h1 class="h3 mb-1">مشاركة نتيجة الفحص</h1><p class="text-white-50 m-0">@Model.Drug1Name — @Model.Drug2Name</p></div></div>
+  <div class="alert-dp warning mb-4"><i class="fa-solid fa-shield-halved"></i><span>الرابط يمنح أي شخص يملكه حق مشاهدة هذه النتيجة فقط. لا يتضمن اسمك أو بريدك أو ملفك الصحي.</span></div>
+  @if(Model.IsActive){<div class="p-3 rounded-3 mb-3" style="background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.3)"><strong style="color:var(--teal)">يوجد رابط فعّال</strong><div class="text-white-50 mt-1">ينتهي: @Model.ExpiresAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div></div>}
+  @if(!string.IsNullOrWhiteSpace(Model.NewShareUrl)){
+   <div class="mb-4"><label class="form-label">الرابط الجديد — انسخه الآن</label><div class="input-group"><input id="shareLink" class="form-control" readonly value="@Model.NewShareUrl" style="direction:ltr"><button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('shareLink').value)">نسخ</button></div><small class="text-white-50">لأمان الرابط لا نخزن الرمز الأصلي، لذلك لن يمكن عرضه مرة ثانية.</small></div>
+  }
+  <h2 class="h5">إنشاء رابط جديد أو استبدال الحالي</h2>
+  <form asp-action="CreateShare" method="post" class="d-flex flex-wrap gap-2 align-items-end mb-4"><input type="hidden" name="id" value="@Model.SearchId"><label>مدة الصلاحية<select name="durationDays" class="form-select mt-1"><option value="1">يوم واحد</option><option value="7" selected>7 أيام</option><option value="30">30 يوماً</option></select></label><button class="btn btn-primary" type="submit"><i class="fa-solid fa-link ms-2"></i>إنشاء رابط</button></form>
+  @if(Model.IsActive){<form asp-action="RevokeShare" method="post" onsubmit="return confirm('إلغاء الرابط الحالي فوراً؟')"><input type="hidden" name="id" value="@Model.SearchId"><button class="btn btn-outline-danger" type="submit"><i class="fa-solid fa-link-slash ms-2"></i>إلغاء الرابط الحالي</button></form>}
+ </div>
+</div>

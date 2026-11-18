@@ -1,0 +1,17 @@
+@model HealthReview
+<section class="panel" style="background:#172438;color:#e7edf6;border:1px solid #53647b;border-radius:16px;padding:24px;margin:22px 0">
+ <h2>المراجعة الحالية — تقييم جزئي</h2>
+ <p>أدوية مستمرة ذات مواد فعالة مسجلة: @Model.LinkedCount من @Model.MedicationCount.</p>
+ <p>أعيد الحساب: @Model.EvaluatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") (عمّان). نسخة القواعد: @Model.RuleVersion.</p>
+ <p>المراجعة تعرض تطابقات محددة ومعلومات من النشرات، وليست فحصاً سريرياً شاملاً. لا تُغيّر الجرعة أو العلاج تلقائياً. أعد تحميل الصفحة إذا عدّلت البيانات في نافذة أخرى.</p>
+ @if(Model.Findings.Count==0){<p>لم يظهر تطابق ضمن القواعد المتاحة. هذا لا يضمن سلامة الأدوية.</p>}
+ @foreach(var finding in Model.Findings) {
+  <article data-finding="@finding.Kind" data-priority="@finding.Priority" style="border-right:4px solid @(finding.Priority=="urgent"?"#ff6b7d":finding.Priority=="review"?"#ffcf75":"#88b9e7");padding:12px 18px;margin:18px 0;background:#1e3048">
+   <strong>@(finding.Priority=="urgent"?"مراجعة عاجلة قبل الجرعة التالية":finding.Priority=="review"?"يحتاج مراجعة":"لم يكتمل التقييم") · @finding.Related</strong>
+   <p style="margin:10px 0;line-height:1.9">@finding.Message</p>
+   @if(finding.SourceUrl!=null){<a href="@finding.SourceUrl" target="_blank" rel="noopener noreferrer" style="color:#7fddff">فتح النشرة / مصدر المطابقة</a><small> · تاريخ المصدر: @finding.SourceDate</small>}
+  </article>
+ }
+ <p><small>مصدر النشرات openFDA / DailyMed. قد تكون البيانات ناقصة أو غير محدثة ولا يُعتمد على openFDA وحده لاتخاذ قرار علاجي. حدود الفحص: مطابقة أسماء المواد، ربط نصي للحالات والتداخلات، وقواعد محددة موضحة عند ظهورها.</small></p>
+</section>
+

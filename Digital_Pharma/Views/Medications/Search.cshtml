@@ -1,0 +1,35 @@
+@model LabelSearchPage
+@{ViewData["Title"]="اختيار منتج دوائي";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+ <span class="eyebrow">DIGITAL PHARMA · هوية الدواء</span>
+ <h1>اختر المنتج الصحيح قبل حفظه</h1>
+ <p class="muted">طابق الاسم والمصنّع وطريق الاستخدام ومعلومات التركيز مع العبوة. قد توجد منتجات متعددة للاسم نفسه؛ لا نختار أول نتيجة تلقائياً.</p>
+ <form method="get" class="panel"><label for="q">اسم الدواء أو المادة الفعالة — يفضّل الاسم الإنجليزي</label>
+ <input id="q" name="q" value="@Model.Query" minlength="2" maxlength="100" required />
+ <input type="hidden" name="medicationId" value="@Model.MedicationId" />
+ <button type="submit" class="action">البحث في النشرات</button></form>
+ @if(TempData["LabelError"] is string error){<p class="panel" role="alert">@error</p>}
+ @if(Model.Lookup.Error!=null){<p class="panel" role="alert">@Model.Lookup.Error</p>}
+ @foreach(var label in Model.Lookup.Labels) {
+  <section class="panel">
+   <h2>@label.DisplayName</h2><p>@string.Join("، ",label.Names.Generic)</p>
+   <dl class="grid">
+    <div><dt>المواد الفعالة المسماة</dt><dd>@(label.Names.Substances.Length==0?"غير متاحة؛ لن يكتمل تقييم المواد":string.Join("، ",label.Names.Substances))</dd></div>
+    <div><dt>المصنّع</dt><dd>@string.Join("، ",label.Names.Manufacturers)</dd></div>
+    <div><dt>طريق الاستخدام</dt><dd>@string.Join("، ",label.Names.Routes)</dd></div>
+    <div><dt>معرّف المنتج NDC</dt><dd>@string.Join("، ",label.Names.Ndc)</dd></div>
+   </dl>
+   @if(label.ActiveIngredient.Length>0){<details><summary>معلومات المادة والتركيز من النشرة</summary><p class="note">@string.Join("\n",label.ActiveIngredient).Substring(0,Math.Min(1500,string.Join("\n",label.ActiveIngredient).Length))</p></details>}
+   <p class="muted">تاريخ النشرة: @label.EffectiveTime · <a href="@label.SourceUrl" target="_blank" rel="noopener noreferrer">المصدر</a></p>
+   <form asp-action="Add" method="post">
+    <input type="hidden" name="labelId" value="@label.Id" /><input type="hidden" name="medicationId" value="@Model.MedicationId" />
+    <label for="notes-@label.Id">ملاحظات الاستخدام حسب وصفتك — اختيارية</label><input id="notes-@label.Id" name="notes" maxlength="1000" />
+    <button type="submit" class="action">@(Model.MedicationId.HasValue?"تأكيد ربط هذا المنتج وإعادة المراجعة":"هذا منتجي — إضافة ومراجعة الأدوية")</button>
+   </form>
+  </section>
+ }
+ <p class="muted">تغطية النشرات مرتبطة بالمصدر الأمريكي؛ قد لا نجد الاسم التجاري المحلي. لا تستبدل المنتج بآخر لمجرد تشابه الاسم.</p>
+ <a asp-controller="Home" asp-action="MyMedications">العودة إلى أدويتي</a>
+</main>
+

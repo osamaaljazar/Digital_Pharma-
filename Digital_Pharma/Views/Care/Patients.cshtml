@@ -1,0 +1,11 @@
+@model List<CareLink>
+@{ViewData["Title"]="مرضاي وطلبات المتابعة";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow"><h1>مرضاي وطلبات المتابعة</h1><p>أرسل أصحاب الطلبات موافقتهم على الاطلاع. الطلب المعلق لا يتيح أي بيانات صحية قبل قبولك.</p>
+@if(Model.Count==0){<p class="panel">لا توجد طلبات أو روابط متابعة فعّالة.</p>}
+@foreach(var link in Model){<section class="panel"><h2>@link.Patient.UserName</h2><p>@CareStatus.Label(link.Status)</p>
+@if(link.Status=="active"){<a class="action" asp-action="Patient" asp-route-id="@link.Id">فتح ملف المريض</a>}
+else{<form asp-action="Decide" method="post"><input type="hidden" name="id" value="@link.Id"/><input type="hidden" name="version" value="@Convert.ToBase64String(link.RowVersion)"/><button class="action" name="decision" value="active">قبول المتابعة</button> <button class="action" name="decision" value="rejected">رفض الطلب</button></form>}
+<form asp-action="Revoke" method="post"><input type="hidden" name="id" value="@link.Id"/><input type="hidden" name="version" value="@Convert.ToBase64String(link.RowVersion)"/><button class="action">إنهاء المتابعة / إلغاء الطلب</button></form>
+</section>}
+</main>

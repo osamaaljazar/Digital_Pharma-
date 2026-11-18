@@ -1,0 +1,20 @@
+@model Digital_Pharma.Models.VisitReportOptions
+@{ViewData["Title"]="تقرير زيارة الطبيب";}
+<div class="container py-5" style="max-width:850px">
+ <div class="glass-card p-4 p-md-5">
+  <div class="d-flex align-items-center gap-3 mb-4"><i class="fa-solid fa-file-medical fa-2x" style="color:var(--teal)"></i><div><h1 class="h3 mb-1">تقرير زيارة الطبيب</h1><p class="m-0 text-white-50">اختر المعلومات التي تريد أخذها معك إلى الزيارة.</p></div></div>
+  <form asp-action="Preview" method="post">
+   <div asp-validation-summary="ModelOnly" class="alert-dp danger mb-3"></div>
+   <div class="row g-3">
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeProfile" style="width:20px;height:20px"><span><strong>البيانات الأساسية</strong><small class="d-block text-white-50 mt-1">الاسم والعمر والجنس والطبيب المتابع</small></span></label></div>
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeConditions" style="width:20px;height:20px"><span><strong>الحالات الصحية</strong><small class="d-block text-white-50 mt-1">الحالات المسجلة في ملفك الصحي</small></span></label></div>
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeAllergies" style="width:20px;height:20px"><span><strong>الحساسيات</strong><small class="d-block text-white-50 mt-1">الحساسية والتفاعل والشدة المبلغ عنها</small></span></label></div>
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeMedications" style="width:20px;height:20px"><span><strong>الأدوية الحالية</strong><small class="d-block text-white-50 mt-1">الجرعات والمواعيد والتعليمات</small></span></label></div>
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeDoseSummary" style="width:20px;height:20px"><span><strong>ملخص الجرعات</strong><small class="d-block text-white-50 mt-1">المتناول والمتخطى خلال آخر 30 يوماً</small></span></label></div>
+    <div class="col-md-6"><label class="d-flex gap-3 p-3 rounded-3 h-100" style="background:rgba(255,255,255,.04);border:1px solid var(--border-clr);cursor:pointer"><input asp-for="IncludeRecentChecks" style="width:20px;height:20px"><span><strong>آخر الفحوص</strong><small class="d-block text-white-50 mt-1">آخر 10 فحوص للتداخلات الدوائية</small></span></label></div>
+   </div>
+   <div class="mt-4"><label asp-for="VisitNote" class="form-label">ملاحظة تريد مناقشتها مع الطبيب <span class="text-white-50">(اختياري)</span></label><textarea asp-for="VisitNote" class="form-control" rows="3" maxlength="500" style="background:#172238;color:white;border-color:var(--border-clr)"></textarea><span asp-validation-for="VisitNote" class="text-danger"></span></div>
+   <button class="btn btn-primary mt-4 px-4 py-2" type="submit"><i class="fa-solid fa-eye ms-2"></i> معاينة التقرير</button>
+  </form>
+ </div>
+</div>

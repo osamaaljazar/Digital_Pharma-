@@ -1,0 +1,82 @@
+@model HealthPage
+@using Digital_Pharma.Services
+@{ViewData["Title"]="صحتي";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<link rel="stylesheet" href="~/css/patient-pages.css" asp-append-version="true" />
+
+<main class="patient-page">
+ <header class="patient-hero">
+  <div class="patient-hero-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+  <div><h1>صحتي</h1><p>حدّث معلوماتك الصحية والحساسيات لتصبح مراجعة الأدوية أوضح وأكثر ملاءمة لحالتك.</p></div>
+  <span class="hero-chip"><i class="fa-solid fa-lock"></i> معلومات خاصة</span>
+ </header>
+
+ <section class="summary-grid" aria-label="ملخص الملف الصحي">
+  <div class="summary-card"><i class="fa-solid fa-stethoscope"></i><div><strong>@Model.Profile.ConditionCodes.Count</strong><span>حالة صحية محددة</span></div></div>
+  <div class="summary-card"><i class="fa-solid fa-shield-virus"></i><div><strong>@Model.Allergies.Count</strong><span>حساسية مسجلة</span></div></div>
+  <div class="summary-card"><i class="fa-solid fa-link"></i><div><strong>@Model.SubstanceOptions.Count</strong><span>مادة فعالة متاحة للربط</span></div></div>
+ </section>
+
+ <div asp-validation-summary="All" role="alert" class="medical-card"></div>
+
+ <form asp-action="Save" method="post" class="medical-card">
+  <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-id-card"></i></span><h2>معلوماتي الصحية</h2></div>
+  <p class="section-intro">اختر المعلومات المؤكدة فقط. لا يستنتج النظام تشخيصاً أو حالة حمل من بيانات أخرى.</p>
+  <input asp-for="Profile.Version" type="hidden" />
+  <div class="health-form-grid">
+   <div class="field"><label asp-for="Profile.UserName">الاسم</label><input asp-for="Profile.UserName" maxlength="100" required /></div>
+   <div class="field"><label asp-for="Profile.DateOfBirth">تاريخ الميلاد</label><input asp-for="Profile.DateOfBirth" type="date" required /></div>
+   <div class="field"><label asp-for="Profile.Gender">الجنس</label><select asp-for="Profile.Gender"><option value="unknown">غير محدد</option><option value="male">ذكر</option><option value="female">أنثى</option></select></div>
+   <div class="field"><label asp-for="Profile.IsPregnant">حالة الحمل عند انطباقها</label><select asp-for="Profile.IsPregnant"><option value="">غير محدد / لا ينطبق</option><option value="true">حامل</option><option value="false">غير حامل</option></select></div>
+  </div>
+
+  <div class="section-heading" style="margin-top:26px"><span class="section-icon"><i class="fa-solid fa-notes-medical"></i></span><h3>الحالات الصحية المشخّصة</h3></div>
+  <p class="section-intro">تسجيل حالتين لا يعني وجود تعارض بينهما؛ تظهر التنبيهات فقط عندما توجد قاعدة أو معلومة مرتبطة بالدواء.</p>
+  <div class="condition-grid">
+  @foreach(var condition in HealthCatalog.Conditions) {
+   <label class="condition-chip"><input type="checkbox" name="Profile.ConditionCodes" value="@condition.Code" checked="@Model.Profile.ConditionCodes.Contains(condition.Code)" /><span>@condition.Name</span></label>
+  }
+  </div>
+  <div class="field"><label asp-for="Profile.OtherNotes">حالات أخرى أو ملاحظات سابقة</label><textarea asp-for="Profile.OtherNotes" maxlength="2000" rows="3"></textarea></div>
+  <p class="field-help">الملاحظات الحرة محفوظة، لكنها لا تتحول تلقائياً إلى تشخيص أو نتيجة أمان.</p>
+  <button type="submit" class="primary-action"><i class="fa-solid fa-floppy-disk"></i> حفظ المعلومات وإعادة المراجعة</button>
+ </form>
+
+ <section class="medical-card">
+  <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-shield-virus"></i></span><h2>الحساسيات الدوائية</h2></div>
+  <p class="section-intro">سجّل التفاعل الذي حدث واربطه بالمادة الفعالة فقط عندما تكون متأكدًا منها.</p>
+  @if(Model.Allergies.Count==0){<div class="empty-clinical"><i class="fa-solid fa-shield"></i><strong>لا توجد حساسية مسجلة</strong><p>عدم التسجيل لا يعني التأكد من عدم وجود حساسية.</p></div>}
+  else {
+   <div class="allergy-list">
+   @foreach(var allergy in Model.Allergies){
+    <article class="allergy-card">
+     <div class="allergy-card-header"><strong>@allergy.Name</strong><span class="status-pill">@((allergy.ReportedSeverity=="severe")?"شديدة":(allergy.ReportedSeverity=="mild")?"خفيفة":"غير محددة")</span></div>
+     <p class="field-help">التفاعل السابق: @allergy.Reaction</p>
+     <p class="field-help">@(allergy.SubstanceKey==null?"غير مرتبطة بمادة فعالة؛ التقييم غير مكتمل":"مرتبطة بمادة فعالة من نشرة دواء")</p>
+     <div class="allergy-actions"><a class="secondary-action" asp-action="EditAllergy" asp-route-id="@allergy.Id"><i class="fa-solid fa-pen"></i> تعديل</a><form asp-action="DeleteAllergy" method="post" onsubmit="return confirm('حذف الحساسية من السجل؟')"><input type="hidden" name="id" value="@allergy.Id" /><input type="hidden" name="version" value="@Convert.ToBase64String(allergy.RowVersion)" /><button type="submit" class="danger-action"><i class="fa-solid fa-trash"></i> حذف</button></form></div>
+    </article>
+   }
+   </div>
+  }
+
+  <form asp-action="SaveAllergy" method="post" style="margin-top:28px">
+   <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-plus"></i></span><h3>@(Model.Allergy.Id==0?"إضافة حساسية":"تعديل الحساسية")</h3></div>
+   <input asp-for="Allergy.Id" type="hidden" /><input asp-for="Allergy.Version" type="hidden" />
+   <div class="health-form-grid">
+    <div class="field"><label asp-for="Allergy.Name">اسم الدواء أو المادة</label><input asp-for="Allergy.Name" required maxlength="200" /></div>
+    <div class="field"><label asp-for="Allergy.SubstanceKey">المادة الفعالة المرتبطة</label><select asp-for="Allergy.SubstanceKey"><option value="">غير معروف / غير موجود</option>@foreach(var option in Model.SubstanceOptions){<option value="@option.Key">@option.Value</option>}</select></div>
+    <div class="field"><label asp-for="Allergy.Reaction">وصف التفاعل السابق</label><input asp-for="Allergy.Reaction" required maxlength="500" placeholder="صف ما حدث عند استخدام الدواء" /></div>
+    <div class="field"><label asp-for="Allergy.ReportedSeverity">شدة التفاعل حسب معلوماتك</label><select asp-for="Allergy.ReportedSeverity"><option value="unknown">غير معروفة</option><option value="mild">خفيف</option><option value="severe">شديد</option></select></div>
+   </div>
+   <p class="field-help">مطابقة العائلات الدوائية والحساسية المتصالبة تحتاج مراجعة مختص؛ لا تختر مادة إذا لم تتأكد أنها المقصودة.</p>
+   <button type="submit" class="primary-action"><i class="fa-solid fa-shield-heart"></i> حفظ الحساسية وإعادة المراجعة</button>
+  </form>
+ </section>
+
+ <section class="medical-card">
+  <div class="section-heading"><span class="section-icon"><i class="fa-solid fa-pills"></i></span><h2>مراجعة أدويتي</h2></div>
+  <p class="section-intro">اربط كل دواء بنشرته ومادته الفعالة قبل الاعتماد على التنبيهات.</p>
+  <div class="card-actions"><a class="primary-action" asp-controller="Medications" asp-action="Search"><i class="fa-solid fa-plus"></i> إضافة دواء مرتبط</a><a class="secondary-action" asp-controller="Home" asp-action="MyMedications"><i class="fa-solid fa-pills"></i> فتح أدويتي</a></div>
+ </section>
+ <partial name="_HealthReview" model="Model.Review" />
+</main>

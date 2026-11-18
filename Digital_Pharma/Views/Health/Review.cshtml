@@ -1,0 +1,9 @@
+@model HealthReview
+@{ViewData["Title"]="مراجعة الأدوية";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+ <h1>مراجعة الأدوية</h1>
+ <div class="top"><a asp-controller="Health" asp-action="Index">تعديل الملف والحساسيات</a><a asp-controller="Home" asp-action="MyMedications">قائمة أدويتي</a><a asp-controller="Medications" asp-action="Search">إضافة دواء آخر</a></div>
+ <partial name="_HealthReview" model="Model" />
+</main>
+

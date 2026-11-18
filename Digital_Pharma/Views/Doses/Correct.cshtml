@@ -1,0 +1,9 @@
+@model DoseCorrection
+@{ViewData["Title"]="تصحيح تسجيل الجرعة";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow"><h1>تصحيح تسجيل الجرعة</h1><p>@Model.Record!.DrugName · @Model.Record.Day.ToString("yyyy-MM-dd") · @Model.Record.Time</p>
+<form asp-action="Correct" method="post" class="panel"><div asp-validation-summary="All" role="alert"></div><input asp-for="Id" type="hidden" /><input asp-for="Version" type="hidden" />
+<label asp-for="Status">الحالة الصحيحة</label><select asp-for="Status"><option value="taken">تم تناولها</option><option value="skipped">تم تخطيها</option><option value="unrecorded">إلغاء التسجيل الخاطئ — غير مسجلة</option></select>
+<label asp-for="Reason">سبب التصحيح</label><textarea asp-for="Reason" required maxlength="500"></textarea><button class="action">حفظ التصحيح</button></form>
+<section class="panel"><h2>تاريخ التسجيل والتصحيحات</h2>@foreach(var change in Model.Changes){<article><p>@change.ChangedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") · @DoseStatus.Label(change.BeforeStatus) ← @DoseStatus.Label(change.AfterStatus)</p><p>@change.Reason</p></article>}</section>
+<a asp-action="History">سجل الجرعات</a></main>

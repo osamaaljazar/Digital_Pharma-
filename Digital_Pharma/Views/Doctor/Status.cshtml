@@ -1,0 +1,35 @@
+@model Doctor
+@{ ViewData["Title"]="حالة طلب الاعتماد"; }
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+    <span class="eyebrow">DIGITAL PHARMA · متابعة الطلب</span>
+    <div class="top"><h1>طلب اعتمادك المهني</h1><span class="status">@DoctorStatusText.Label(Model.Status)</span></div>
+    <section class="panel">
+        <h2>@Model.FullName</h2>
+        <p class="muted">@Model.Specialization · @Model.Country</p>
+        <dl class="grid">
+            <div><dt>رقم الترخيص</dt><dd>@Model.LicenseNumber</dd></div>
+            <div><dt>جهة الترخيص</dt><dd>@Model.LicensingAuthority</dd></div>
+        </dl>
+        @if(Model.Status==DoctorApplicationStatus.Approved) {
+            <p>تم اعتماد حسابك. يمكنك فتح بوابة الطبيب.</p>
+            <a class="action" asp-action="Dashboard">فتح بوابة الطبيب</a>
+        } else if(Model.Status is DoctorApplicationStatus.NeedsInformation or DoctorApplicationStatus.Rejected) {
+            <p class="muted">راجع الملاحظات أدناه، ثم صحّح بياناتك وأعد إرسال الطلب.</p>
+            <a class="action" asp-action="Apply">تعديل البيانات وإعادة الإرسال</a>
+        } else if(Model.Status==DoctorApplicationStatus.Suspended) {
+            <p class="muted">صلاحيات الطبيب متوقفة حالياً. راجع سبب التعليق أدناه وتواصل مع إدارة الموقع للاستفسار.</p>
+        } else {
+            <p class="muted">طلبك بانتظار المراجعة. لا تتاح صلاحيات الطبيب حتى اكتمال الاعتماد.</p>
+        }
+    </section>
+    <section class="panel"><h2>سجل الطلب والقرارات</h2>
+        <ul class="timeline">
+        @foreach(var item in Model.Reviews.OrderByDescending(r=>r.CreatedAt).ThenByDescending(r=>r.Id)) {
+            <li><strong>@DoctorStatusText.Label(item.Status)</strong> · <time>@item.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") (عمّان)</time>
+            <p class="note">@item.Note</p></li>
+        }
+        </ul>
+    </section>
+</main>
+

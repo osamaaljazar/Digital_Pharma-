@@ -1,0 +1,13 @@
+@model TreatmentInput
+@{ViewData["Title"]="تعديل الخطة الدوائية";}
+<link rel="stylesheet" href="~/css/doctor-workflow.css"/>
+<main class="workflow"><h1>@(Model.Id==0?"إضافة علاج":"تعديل الخطة الدوائية")</h1><p>المريض: @Model.PatientName</p><h2>@Model.DrugName</h2>
+<form asp-action="Edit" method="post" class="panel"><div asp-validation-summary="All" role="alert"></div>
+<input asp-for="Id" type="hidden"/><input asp-for="Version" type="hidden"/><input asp-for="LinkId" type="hidden"/><input asp-for="LinkVersion" type="hidden"/><input asp-for="LabelId" type="hidden"/><input asp-for="OperationId" type="hidden"/>
+<div class="grid"><div><label asp-for="DoseAmount">مقدار الجرعة الواحدة</label><input asp-for="DoseAmount" type="number" min="0.001" max="999999.999" step="0.001"/></div><div><label asp-for="DoseUnit">وحدة الجرعة</label><select asp-for="DoseUnit"><option value="">غير محددة</option>@foreach(var u in MedicationCardInput.Units){<option value="@u.Key">@u.Value</option>}</select></div>
+<div><label asp-for="ScheduleKind">نوع المواعيد</label><select asp-for="ScheduleKind"><option value="unspecified">غير محددة / حسب التعليمات</option><option value="daily">مواعيد يومية ثابتة</option><option value="as_needed">عند الحاجة</option></select></div><div><label asp-for="DailyTimes">المواعيد اليومية بتوقيت عمّان</label><input asp-for="DailyTimes" dir="ltr" placeholder="08:00, 20:00" maxlength="200"/><small>تُترك فارغة عند اختيار نوع آخر.</small></div>
+<div><label asp-for="Status">حالة العلاج</label><select asp-for="Status"><option value="active">مستمر</option><option value="stopped">إيقاف مع الاحتفاظ بالسجل</option></select></div></div>
+<label asp-for="Instructions">تعليمات العلاج</label><textarea asp-for="Instructions" rows="4" maxlength="1000"></textarea>
+<label asp-for="ChangeReason">سبب الإضافة أو التعديل أو الإيقاف</label><textarea asp-for="ChangeReason" rows="3" maxlength="500" required></textarea>
+<p class="muted">الحفظ يحدّث الخطة الحالية ومواعيد اليوم، ويحتفظ بالتسجيلات السابقة كما كانت. يُرسل إشعار داخل حساب المريض. كمية المخزون وملاحظاته الشخصية لا تتغير هنا.</p>
+<div class="actions"><button class="action" type="submit">حفظ الخطة وإشعار المريض</button><a class="action secondary" asp-controller="Care" asp-action="Patient" asp-route-id="@Model.LinkId">إلغاء والعودة</a></div></form></main>

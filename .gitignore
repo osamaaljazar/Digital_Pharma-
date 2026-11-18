@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Account integration test diagnostics
+tests/AccountChecks/last-run.log
+
+# Private local backups and development state
+.local/

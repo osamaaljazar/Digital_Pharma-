@@ -1,0 +1,47 @@
+@model Doctor
+@{ ViewData["Title"]="مراجعة طلب طبيب"; }
+<link rel="stylesheet" href="~/css/doctor-workflow.css" />
+<main class="workflow">
+    <a asp-action="Index">العودة إلى الطلبات</a>
+    <div class="top"><h1>مراجعة طلب @Model.FullName</h1><span class="status">@DoctorStatusText.Label(Model.Status)</span></div>
+    <section class="panel"><h2>البيانات المقدمة</h2><dl class="grid">
+        <div><dt>البريد الإلكتروني للحساب</dt><dd>@Model.User?.Email</dd></div>
+        <div><dt>رقم التواصل</dt><dd>@Model.ContactPhone</dd></div>
+        <div><dt>التخصص</dt><dd>@Model.Specialization</dd></div>
+        <div><dt>رقم الترخيص</dt><dd>@Model.LicenseNumber</dd></div>
+        <div><dt>بلد الترخيص</dt><dd>@Model.Country</dd></div>
+        <div><dt>الجهة المصدرة</dt><dd>@Model.LicensingAuthority</dd></div>
+    </dl></section>
+    @if(Model.Status is DoctorApplicationStatus.Pending or DoctorApplicationStatus.Approved or DoctorApplicationStatus.Suspended) {
+    <form asp-action="Review" method="post" class="panel">
+        <h2>تسجيل قرار المراجعة</h2>
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <input type="hidden" name="Version" value="@Convert.ToBase64String(Model.RowVersion)" />
+        <label for="Decision">القرار</label>
+        <select name="Decision" id="Decision" required>
+            <option value="">اختر القرار</option>
+            @if(Model.Status==DoctorApplicationStatus.Approved) {
+                <option value="Suspended">تعليق الاعتماد</option>
+            } else {
+                <option value="NeedsInformation">طلب استكمال المعلومات</option>
+                <option value="Rejected">رفض الطلب</option>
+                <option value="Approved">اعتماد الطبيب</option>
+            }
+        </select>
+        <label for="Note" style="margin-top:20px">سبب القرار وطريقة التحقق — تظهر للطبيب</label>
+        <textarea name="Note" id="Note" rows="4" maxlength="2000" required placeholder="اكتب سبب القرار. عند الاعتماد، دوّن كيف تحققت من الهوية والترخيص والمرجع المستخدم."></textarea>
+        <label class="check"><input type="checkbox" name="CredentialsChecked" value="true" />
+            <span>عند الاعتماد: أؤكد أنني تحققت من هوية مقدم الطلب وصحة ترخيصه. تقديم البيانات وحده ليس إثباتاً.</span></label>
+        <button type="submit" class="action">حفظ القرار</button>
+    </form>
+    } else { <p class="panel muted">بانتظار إعادة إرسال الطبيب طلبه بعد التصحيح. لا يمكن اعتماد النسخة المرفوضة أو الناقصة مباشرة.</p> }
+    <section class="panel"><h2>سجل القرارات</h2><ul class="timeline">
+    @foreach(var entry in Model.Reviews.OrderByDescending(r=>r.CreatedAt).ThenByDescending(r=>r.Id)) {
+        <li><strong>@DoctorStatusText.Label(entry.Status)</strong> · @entry.ActorUser.UserName
+            <br /><time>@entry.CreatedAt.ToOffset(TimeSpan.FromHours(3)).ToString("yyyy-MM-dd HH:mm") (عمّان)</time>
+            <p class="note">@entry.Note</p>
+        </li>
+    }
+    </ul></section>
+</main>
+

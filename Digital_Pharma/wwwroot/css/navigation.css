@@ -1,0 +1,201 @@
+.navbar-dp .nav-container {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 48px;
+}
+
+.navbar-dp .brand { flex: 0 0 auto; }
+.navbar-dp .brand .icon-wrap { transition: transform .2s ease, box-shadow .2s ease; }
+.navbar-dp .brand:hover .icon-wrap { transform: rotate(-4deg) scale(1.04); box-shadow: 0 8px 24px rgba(0,201,167,.25); }
+
+.nav-panel {
+    display: contents;
+}
+
+.navbar-dp .brand { order: 1; }
+.primary-links { order: 2; display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
+.navbar-dp .notification-host { order: 3; }
+.nav-account-actions { order: 4; }
+.primary-links .nav-item {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 8px 11px;
+    border-radius: 10px;
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+.primary-links .nav-item::after {
+    content: "";
+    position: absolute;
+    right: 12px;
+    left: 12px;
+    bottom: 2px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--teal), #4d9cff);
+    transform: scaleX(0);
+    transition: transform .2s ease;
+}
+.primary-links .nav-item:hover {
+    color: var(--teal);
+    background: rgba(0,201,167,.09);
+    transform: translateY(-1px);
+}
+.primary-links .nav-item.active { color: #fff; background: rgba(0,201,167,.13); }
+.primary-links .nav-item.active::after { transform: scaleX(1); }
+.primary-links .nav-item i { color: inherit; }
+
+.nav-account-actions { margin-inline-start: auto; display: flex; align-items: center; gap: 9px; }
+.account-link { text-decoration: none; }
+.account-menu { position: relative; }
+.account-menu > summary { list-style: none; cursor: pointer; }
+.account-menu > summary::-webkit-details-marker { display: none; }
+.account-menu .user-badge { min-height: 42px; transition: transform .2s ease, box-shadow .2s ease; }
+.account-menu .user-badge:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(13,110,253,.28); }
+.account-popover {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 10px);
+    min-width: 190px;
+    padding: 8px;
+    border: 1px solid var(--border-clr);
+    border-radius: 12px;
+    background: #172238;
+    box-shadow: 0 18px 45px rgba(0,0,0,.35);
+    z-index: 1030;
+}
+.account-popover a { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 8px 10px; color: #e7eefb; text-decoration: none; border-radius: 8px; }
+.account-popover a:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+.notification-bell {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 12px;
+    color: rgba(255,255,255,.78);
+    background: rgba(255,255,255,.05);
+    text-decoration: none;
+    transition: color .2s ease, background .2s ease, transform .2s ease;
+}
+.notification-bell:hover { color: var(--teal); background: rgba(0,201,167,.11); transform: translateY(-1px); }
+.notification-count {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: #ef3340;
+    color: #fff;
+    border: 2px solid #111b2f;
+    font-size: .69rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.notification-bell.has-unread i { animation: bellNudge .65s ease 1; transform-origin: top center; }
+@keyframes bellNudge { 0%,100%{transform:rotate(0)} 25%{transform:rotate(12deg)} 55%{transform:rotate(-10deg)} 75%{transform:rotate(6deg)} }
+
+.menu-toggle { display: none; width: 44px; height: 44px; border: 1px solid var(--border-clr); border-radius: 11px; background: rgba(255,255,255,.05); color: #fff; }
+.nav-overlay { display: none; }
+
+.doctor-toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    width: min(390px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 46px 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 16px;
+    border: 1px solid rgba(0,201,167,.3);
+    border-radius: 16px;
+    background: rgba(20,31,52,.97);
+    box-shadow: 0 20px 55px rgba(0,0,0,.42);
+    z-index: 1100;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: opacity .3s ease, transform .3s ease, visibility .3s;
+}
+.doctor-toast.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.doctor-toast-icon { width: 46px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 13px; background: linear-gradient(135deg,rgba(0,201,167,.25),rgba(13,110,253,.25)); color: var(--teal); }
+.doctor-toast strong { display: block; margin-bottom: 4px; color: #fff; }
+.doctor-toast p { margin: 0 0 9px; color: rgba(255,255,255,.66); font-size: .86rem; line-height: 1.55; }
+.doctor-toast a { color: var(--teal); font-weight: 700; text-decoration: none; font-size: .84rem; }
+.doctor-toast-close { border: 0; background: transparent; color: rgba(255,255,255,.55); width: 32px; height: 32px; border-radius: 8px; }
+.doctor-toast-close:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+.medications-tabs { display: flex; justify-content: center; gap: 8px; margin: 0 auto 28px; padding: 6px; width: fit-content; max-width: 100%; border: 1px solid rgba(255,255,255,.1); border-radius: 14px; background: rgba(255,255,255,.04); }
+.medications-tabs a { min-height: 44px; padding: 10px 20px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 10px; color: rgba(255,255,255,.62); text-decoration: none; font-weight: 700; transition: .2s ease; }
+.medications-tabs a:hover { color: var(--teal); background: rgba(0,201,167,.08); }
+.medications-tabs a.active { color: #fff; background: linear-gradient(135deg,rgba(0,201,167,.25),rgba(13,110,253,.25)); box-shadow: inset 0 0 0 1px rgba(0,201,167,.22); }
+
+@media (max-width: 1050px) {
+    .navbar-dp .nav-container { flex-wrap: wrap; }
+    .menu-toggle { display: inline-flex; align-items: center; justify-content: center; order: 1; }
+    .navbar-dp .brand { order: 2; }
+    .navbar-dp .notification-host { margin-inline-start: auto; order: 3; }
+    .nav-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(340px, 88vw);
+        height: 100dvh;
+        padding: 86px 18px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 18px;
+        background: #111b2f;
+        border-left: 1px solid var(--border-clr);
+        box-shadow: -18px 0 50px rgba(0,0,0,.4);
+        z-index: 1020;
+        transform: translateX(105%);
+        transition: transform .28s ease;
+        overflow-y: auto;
+    }
+    body.nav-open { overflow: hidden; }
+    body.nav-open .nav-panel { transform: translateX(0); }
+    .primary-links { flex-direction: column; align-items: stretch; gap: 5px; }
+    .primary-links .nav-item { width: 100%; padding: 11px 13px; }
+    .primary-links .nav-item { font-size: 1.05rem; }
+    .primary-links .nav-item::after { right: 13px; left: auto; top: 9px; bottom: 9px; width: 3px; height: auto; transform: scaleY(0); }
+    .primary-links .nav-item.active::after { transform: scaleY(1); }
+    .nav-account-actions { display: contents; }
+    .account-link { order: -2; width: 100%; justify-content: center; margin-bottom: 4px; }
+    .primary-links { order: -1; }
+    .logout-form { margin-top: auto !important; }
+    .navbar-dp button.btn-logout { width: 100%; justify-content: center; }
+    .nav-overlay { position: fixed; inset: 0; display: block; background: rgba(3,8,18,.62); opacity: 0; visibility: hidden; transition: .25s; z-index: 1010; }
+    body.nav-open .nav-overlay { opacity: 1; visibility: visible; }
+}
+
+@media (max-width: 520px) {
+    .navbar-dp .brand span { font-size: 1rem; }
+    .navbar-dp .brand .icon-wrap { width: 36px; height: 36px; }
+    .doctor-toast { right: 16px; bottom: 16px; }
+    .medications-tabs { width: 100%; }
+    .medications-tabs a { flex: 1; padding-inline: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .notification-bell.has-unread i { animation: none; }
+    .primary-links .nav-item, .nav-panel, .doctor-toast { transition: none; }
+}

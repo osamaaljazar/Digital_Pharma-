@@ -1,0 +1,26 @@
+@model string
+<div class="dp-assistant" data-page-key="@Model">
+    <button class="dp-assistant-launcher" type="button" aria-label="فتح مساعد Digital Pharma" aria-controls="dp-assistant-panel" aria-expanded="false">
+        <i class="fa-solid fa-comment-medical" aria-hidden="true"></i>
+        <span>مساعد AI</span>
+    </button>
+    <section class="dp-assistant-panel" id="dp-assistant-panel" role="dialog" aria-modal="false" aria-labelledby="dp-assistant-title" hidden>
+        <header>
+            <div><span class="dp-assistant-status" aria-hidden="true"></span><div><strong id="dp-assistant-title">مساعد Digital Pharma</strong><small>اسأل عن الأدوية أو استخدام المنصة</small></div></div>
+            <button class="dp-assistant-close" type="button" aria-label="إغلاق المساعد"><i class="fa-solid fa-xmark"></i></button>
+        </header>
+        <div class="dp-chat-messages" aria-live="polite">
+            <div class="dp-chat-message ai">مرحباً، كيف يمكنني مساعدتك؟ لن أستخدم معلومات ملفك الصحي إلا إذا فعّلت الخيار أدناه.</div>
+        </div>
+        <div class="dp-chat-suggestions">
+            <button type="button">كيف أضيف دواء؟</button><button type="button">ما معنى فحص التداخل؟</button>
+        </div>
+        <label class="dp-health-consent"><input type="checkbox" /> <span>استخدام معلوماتي الصحية وأدويتي في هذا السؤال</span></label>
+        <form class="dp-chat-form">
+            <label class="visually-hidden" for="dp-global-question">اكتب سؤالك</label>
+            <textarea id="dp-global-question" maxlength="600" rows="1" placeholder="اكتب سؤالك هنا..." required></textarea>
+            <button type="submit" aria-label="إرسال السؤال"><i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+        <p class="dp-chat-disclaimer">معلومات توعوية لا تستبدل الطبيب أو الصيدلي.</p>
+    </section>
+</div>

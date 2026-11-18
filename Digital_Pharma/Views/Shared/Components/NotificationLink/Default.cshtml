@@ -1,0 +1,14 @@
+@model DigitalPharma.MVC.ViewComponents.NotificationNavModel
+<div class="notification-host">
+ <a class="notification-bell @(Model.Count>0?"has-unread":"")" asp-controller="Notifications" asp-action="Index" aria-label="الإشعارات: @Model.Count غير مقروء" title="الإشعارات">
+  <i class="fa-regular fa-bell" aria-hidden="true"></i>
+  @if(Model.Count>0){<span class="notification-count">@(Model.Count>9?"9+":Model.Count.ToString())</span>}
+ </a>
+</div>
+@if(Model.LatestId.HasValue){
+ <aside class="doctor-toast" data-notification-id="@Model.LatestId" role="status" aria-live="polite">
+  <div class="doctor-toast-icon"><i class="fa-solid fa-user-doctor"></i></div>
+  <div><strong>لديك تعديل جديد من الطبيب</strong><p>@(string.IsNullOrWhiteSpace(Model.DoctorName)?"راجع تفاصيل التغيير الجديد على خطتك العلاجية.":$"أرسل الدكتور {Model.DoctorName} تحديثاً على خطتك العلاجية.")</p><a asp-controller="Notifications" asp-action="Details" asp-route-id="@Model.LatestId">عرض التفاصيل</a></div>
+  <button type="button" class="doctor-toast-close" aria-label="إغلاق التنبيه"><i class="fa-solid fa-xmark"></i></button>
+ </aside>
+}
