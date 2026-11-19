@@ -45,7 +45,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         {
             var db = context.HttpContext.RequestServices.GetRequiredService<PharmaDbContext>();
             var id = int.TryParse(context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var parsed) ? parsed : 0;
-            var account = await db.Users.AsNoTracking().SingleOrDefaultAsync(u=>u.Id==id);
+            var account = await AccountRoles.AuthenticationFields(db.Users.AsNoTracking().Where(u => u.Id == id)).SingleOrDefaultAsync();
             var cookieVersion = int.TryParse(context.Principal?.FindFirstValue("session_version"), out var version) ? version : -1;
             if (account == null || !account.EmailConfirmed || account.LockoutEnd > DateTimeOffset.UtcNow || cookieVersion != account.SessionVersion)
             {

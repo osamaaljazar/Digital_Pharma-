@@ -110,7 +110,7 @@ namespace DigitalPharma.MVC.Controllers
         {
             var normalizedEmail = (email ?? "").Trim().ToLowerInvariant();
             var user = normalizedEmail.Length <= 254 && !string.IsNullOrEmpty(password) && password.Length <= 128
-                ? await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail) : null;
+                ? await AccountRoles.AuthenticationFields(_context.Users.AsNoTracking().Where(u => u.Email.ToLower() == normalizedEmail)).FirstOrDefaultAsync() : null;
             var verification = user == null ? PasswordVerificationResult.Failed : _passwords.Verify(user, password);
             if (user == null || verification == PasswordVerificationResult.Failed || user.LockoutEnd > DateTimeOffset.UtcNow)
             {
@@ -124,11 +124,21 @@ namespace DigitalPharma.MVC.Controllers
                 TempData["LoginEmail"]=normalizedEmail;
                 return RedirectToAction(nameof(VerifyEmailNotice),new{email=normalizedEmail});
             }
-            if (verification == PasswordVerificationResult.SuccessRehashNeeded)
-                user.PasswordHash = _passwords.Hash(user, password);
-            // Retain the old column for database compatibility, never the plaintext password.
-            user.Password = string.Empty;
-            await _context.SaveChangesAsync();
+            if (verification == PasswordVerificationResult.SuccessRehashNeeded || !string.IsNullOrEmpty(user.Password))
+            {
+                var hash = verification == PasswordVerificationResult.SuccessRehashNeeded
+                    ? _passwords.Hash(user, password) : user.PasswordHash;
+                var updated = await _context.Users
+                    .Where(u => u.Id == user.Id && u.SessionVersion == user.SessionVersion && u.PasswordHash == user.PasswordHash)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(u => u.PasswordHash, hash)
+                        .SetProperty(u => u.Password, string.Empty));
+                if (updated == 0)
+                {
+                    TempData["LoginError"] = "تغيّرت بيانات الحساب. أعد تسجيل الدخول.";
+                    return RedirectToAction("Auth");
+                }
+            }
             await SignInUserAsync(user);
             return await LandingAsync(user);
         }
@@ -294,7 +304,7 @@ namespace DigitalPharma.MVC.Controllers
             var publicOrAccountActions=new[] { "Auth", "Login", "SignUp", "Logout", "ForgotPassword", "ForgotPasswordConfirmation", "ResetPassword", "ViewShared", "DoctorInfo", "Error" };
             if(User.Identity?.IsAuthenticated==true && !User.IsInRole(AccountRoles.Patient) && !publicOrAccountActions.Contains(action))
             {
-                var account=await _context.Users.SingleAsync(u=>u.Id==CurrentUserId);
+                var account=await AccountRoles.AuthenticationFields(_context.Users.AsNoTracking().Where(u=>u.Id==CurrentUserId)).SingleAsync();
                 context.Result=await LandingAsync(account); return;
             }
             await next();
