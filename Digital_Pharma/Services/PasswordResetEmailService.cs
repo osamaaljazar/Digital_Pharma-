@@ -24,10 +24,13 @@ public sealed class PasswordResetEmailService(IConfiguration configuration, ILog
     public async Task<bool> SendConfirmationAsync(string recipient,string confirmationUrl,CancellationToken cancellationToken)
     {
         var subject="تأكيد بريد Digital Pharma";
+        var encodedUrl = WebUtility.HtmlEncode(confirmationUrl);
         var html=$"""
             <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8">
               <h2>تأكيد البريد الإلكتروني</h2><p>أكمل إنشاء حسابك بتأكيد هذا البريد.</p>
-              <p><a href="{WebUtility.HtmlEncode(confirmationUrl)}">تأكيد البريد والدخول</a></p>
+              <p><a href="{encodedUrl}">تأكيد البريد والدخول</a></p>
+              <p>إذا لم تتمكن من الضغط على الرابط، انسخ العنوان التالي وافتحه في المتصفح:</p>
+              <p dir="ltr" style="overflow-wrap:anywhere;word-break:break-all">{encodedUrl}</p>
               <p>ينتهي الرابط خلال 24 ساعة ويُستخدم مرة واحدة فقط. إذا لم تنشئ الحساب، فتجاهل الرسالة.</p>
             </div>
             """;
