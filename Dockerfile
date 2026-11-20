@@ -22,6 +22,10 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
 EXPOSE 8080
 
 COPY --from=build /app/publish .
+COPY docker-entrypoint.sh /usr/local/bin/digital-pharma-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/digital-pharma-entrypoint \
+    && chmod 0755 /usr/local/bin/digital-pharma-entrypoint \
+    && command -v setpriv
 
 USER $APP_UID
-ENTRYPOINT ["dotnet", "Digital_Pharma.dll"]
+ENTRYPOINT ["/usr/local/bin/digital-pharma-entrypoint"]
