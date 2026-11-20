@@ -1,10 +1,12 @@
 using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using MailKit.Security;
 using MimeKit;
 
 namespace Digital_Pharma.Services;
 
-public sealed class PasswordResetEmailService(IConfiguration configuration, ILogger<PasswordResetEmailService> logger)
+public sealed class PasswordResetEmailService(IConfiguration configuration, ILogger<PasswordResetEmailService> logger, IHttpClientFactory clients)
 {
     public async Task<bool> SendAsync(string recipient, string resetUrl, CancellationToken cancellationToken)
     {
@@ -34,6 +36,9 @@ public sealed class PasswordResetEmailService(IConfiguration configuration, ILog
 
     private async Task<bool> SendMessageAsync(string recipient,string subject,string html,CancellationToken cancellationToken)
     {
+        if (string.Equals(configuration["Email:Provider"], "Brevo", StringComparison.OrdinalIgnoreCase))
+            return await SendViaBrevoAsync(recipient, subject, html, cancellationToken);
+
         var host = configuration["Smtp:Host"];
         var from = configuration["Smtp:From"];
         var user = configuration["Smtp:User"];
@@ -93,5 +98,50 @@ public sealed class PasswordResetEmailService(IConfiguration configuration, ILog
             logger.LogError(exception, "Password reset email delivery failed.");
             return false;
         }
+    }
+
+    private async Task<bool> SendViaBrevoAsync(string recipient, string subject, string html, CancellationToken cancellationToken)
+    {
+        var sender = configuration["Email:From"];
+        var apiKey = configuration["Email:ApiKey"];
+        if (string.IsNullOrWhiteSpace(sender) || string.IsNullOrWhiteSpace(apiKey))
+        {
+            logger.LogWarning("Transactional email was skipped because HTTPS email is not configured.");
+            return false;
+        }
+
+        try
+        {
+            using var client = clients.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(15);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email")
+            {
+                Content = JsonContent.Create(new
+                {
+                    sender = new { email = sender, name = configuration["Smtp:FromName"] ?? "Digital Pharma" },
+                    to = new[] { new { email = recipient } },
+                    subject,
+                    htmlContent = html
+                })
+            };
+            request.Headers.Add("api-key", apiKey);
+            using var response = await client.SendAsync(request, cancellationToken);
+            if (response.IsSuccessStatusCode)
+            {
+                using var result = JsonDocument.Parse(await response.Content.ReadAsStreamAsync(cancellationToken));
+                if (result.RootElement.ValueKind == JsonValueKind.Object &&
+                    result.RootElement.TryGetProperty("messageId", out var messageId) &&
+                    messageId.ValueKind == JsonValueKind.String &&
+                    !string.IsNullOrWhiteSpace(messageId.GetString()))
+                    return true;
+            }
+            logger.LogWarning("HTTPS email provider did not accept the message. HTTP status {StatusCode}.", (int)response.StatusCode);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or JsonException or FormatException ||
+            (exception is OperationCanceledException && !cancellationToken.IsCancellationRequested))
+        {
+            logger.LogWarning("HTTPS email delivery failed ({ErrorType}).", exception.GetType().Name);
+        }
+        return false;
     }
 }
