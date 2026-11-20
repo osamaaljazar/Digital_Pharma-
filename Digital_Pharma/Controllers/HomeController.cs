@@ -153,12 +153,29 @@ namespace DigitalPharma.MVC.Controllers
         public async Task<IActionResult> ConfirmEmail(string? token,CancellationToken cancellationToken)
         {
             if(!TryHashResetToken(token,out var hash))return View("ResetPasswordInvalid");
-            var entry=await _context.EmailConfirmationTokens.Include(t=>t.User).SingleOrDefaultAsync(t=>t.TokenHash==hash && t.UsedAt==null && t.ExpiresAt>DateTimeOffset.UtcNow,cancellationToken);
-            if(entry==null)return View("ResetPasswordInvalid");
-            entry.UsedAt=DateTimeOffset.UtcNow;entry.User.EmailConfirmed=true;entry.User.SessionVersion++;
-            await _context.SaveChangesAsync(cancellationToken);await SignInUserAsync(entry.User);
+            var confirmedUserId = await _context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                var now = DateTimeOffset.UtcNow;
+                var validTokens = _context.EmailConfirmationTokens
+                    .Where(t => t.TokenHash == hash && t.UsedAt == null && t.ExpiresAt > now);
+                var userId = await validTokens.Select(t => (int?)t.UserId).SingleOrDefaultAsync(cancellationToken);
+                if (userId == null || await validTokens.ExecuteUpdateAsync(
+                    setters => setters.SetProperty(t => t.UsedAt, now), cancellationToken) != 1)
+                    return null;
+
+                await _context.Users.Where(u => u.Id == userId).ExecuteUpdateAsync(setters => setters
+                    .SetProperty(u => u.EmailConfirmed, true)
+                    .SetProperty(u => u.SessionVersion, u => u.SessionVersion + 1), cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+                return userId;
+            });
+            if (confirmedUserId == null) return View("ResetPasswordInvalid");
+            var user = await AccountRoles.AuthenticationFields(_context.Users.AsNoTracking()
+                .Where(u => u.Id == confirmedUserId)).SingleAsync(cancellationToken);
+            await SignInUserAsync(user);
             TempData["Success"]="تم تأكيد البريد الإلكتروني.";
-            return await LandingAsync(entry.User);
+            return await LandingAsync(user);
         }
 
         [HttpPost,AllowAnonymous,EnableRateLimiting("passwordRecovery")]
@@ -167,7 +184,9 @@ namespace DigitalPharma.MVC.Controllers
             var normalized=(email??"").Trim().ToLowerInvariant();
             if(normalized.Length<=254 && new EmailAddressAttribute().IsValid(normalized))
             {
-                var user=await _context.Users.SingleOrDefaultAsync(u=>u.Email.ToLower()==normalized,cancellationToken);
+                var user = await _context.Users.Where(u => u.Email.ToLower() == normalized)
+                    .Select(u => new { u.Id, u.Email, u.EmailConfirmed, u.LockoutEnd })
+                    .SingleOrDefaultAsync(cancellationToken);
                 if(user!=null && !user.EmailConfirmed && (user.LockoutEnd==null||user.LockoutEnd<=DateTimeOffset.UtcNow))
                 {
                     var raw=RandomNumberGenerator.GetBytes(32);var encoded=WebEncoders.Base64UrlEncode(raw);
